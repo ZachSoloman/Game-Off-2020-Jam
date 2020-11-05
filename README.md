@@ -6,6 +6,6 @@
 
 ## To Run
 
-`npm update`
+`npm install`
 
 `node index.js`
