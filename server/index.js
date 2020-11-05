@@ -3,14 +3,14 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const http = require('http').Server(app);
-const publicDirectoryPath = path.join(__dirname, './Moon_Shot');
+const publicDirectoryPath = path.join(__dirname, '../client');
 const staticDirectory =  express.static(publicDirectoryPath);
 
 app.use(staticDirectory);
 app.use(express.json());
 
 app.get('/', (req, res) => {
-	fs.readFile('./Moon_Shot/index.html', 'utf8', function(err, content) {
+	fs.readFile('../client/index.html', 'utf8', function(err, content) {
 		res.send(content);
 	});
 });
