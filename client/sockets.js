@@ -21,11 +21,18 @@ function socket_GetUser() {
 
 /* load existing users supplied from the server */
 function loadUsers(users) {
+
   clearSpheres();
   for (let u = 0; u < users.length; u++) {
     createSphere(users[u], user_colors[u % user_colors.length].name, 
 		 user_colors[u % user_colors.length].color);
   }
+}
+
+/* remove existed users from the server */
+function removeUser( user ) {
+  console.log( user );
+  //removeUserSpheres( user.id );
 }
 
 /* set username to input value */
@@ -58,7 +65,8 @@ function play() {
 
 /* handshake */
 socket.on('hi',function(data) {
-  document.getElementById('error-container').innerHTML = data.message;
+  if(document.getElementById('error-container'))
+    document.getElementById('error-container').innerHTML = data.message;
   loadUsers(data.users);
 });
 
@@ -102,7 +110,7 @@ socket.on('spawnAll', function(data) {
 }); 
 
 socket.on('loadData', function(data) {
-  console.log(data);
+  //console.log(data);
   if(data.data.id < Spheres.length 
   && data.data.name != user 
   && data != undefined) {

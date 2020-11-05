@@ -130,8 +130,8 @@ Sphere.prototype.copyData = function() {
   allData.type = this.type;
   allData.x = this.x;
   allData.y = this.y;
-  allData.targetX = this.pos.x;  
-  allData.targetY = this.pos.y;    
+  allData.targetX = this.target.x;  
+  allData.targetY = this.target.y;    
   allData.colorR = this.color.r;
   allData.colorG = this.color.g;
   allData.colorB = this.color.b;
@@ -169,22 +169,28 @@ Sphere.prototype.copyData = function() {
 
 Sphere.prototype.readData = function( inData ) {
   
-  console.log(inData.name);
+  //console.log(inData.name);
   this.name = inData.name;
   this.type = inData.type;
   this.x = inData.x;
   this.y = inData.y;
-  this.target.x = inData.posX;  
-  this.target.y = inData.posY;    
+  this.target = createVector(inData.targetX,inData.targetY);
+  // this.target.x = inData.targetX;  
+  // this.target.y = inData.targetY;
+  // this.target.z = 0;
   this.color.r = inData.colorR;
   this.color.g = inData.colorG;
   this.color.b = inData.colorB;
-  this.color.a = inData.colorA;  
-  this.pos.x = inData.posX;
-  this.pos.y = inData.posY;
-  this.vel.x = inData.velX;
-  this.vel.y = inData.velY;
-  // this.acc = inData.acc;
+  this.color.a = inData.colorA;
+  this.pos = createVector(inData.posX,inData.posY);  
+  // this.pos.x = inData.posX;
+  // this.pos.y = inData.posY;
+  // this.pos.z = 0;
+  this.vel = createVector(inData.velX,inData.velY);    
+  // this.vel.x = inData.velX;
+  // this.vel.y = inData.velY;
+  // this.vel.z = 0;
+  //this.acc = createVector(0,0);
   this.speed = inData.speed;
   this.maxspeed = inData.maxspeed;
   this.maxforce = inData.maxforce;
@@ -232,8 +238,9 @@ Sphere.prototype.behaviors = function() {
       this.applyForce(arrive);
     } 
     else if(this.toss.firing_stage == "bouncing" || 
-      this.toss.firing_stage == "idle" ) {
-//      this.bounce();
+      this.toss.firing_stage == "idle") {
+      if(!this.bouncing)
+        this.bounce();
     }
   } 
 }
@@ -271,11 +278,21 @@ Sphere.prototype.update = function(e) {
   
   this.pos.add(this.vel);
   this.vel.add(this.acc);
-  this.acc.mult(0);
-  if(this.type.includes("planet")) {
-    this.vel.mult(1-this.friction);//friction
+  if(this.type.includes("planet") ) {//friction
+    let mag = this.vel.mag();
+    let friction = 1 - this.friction;
+
+    if( mag > 0.1) {
+      let velX = round( (this.vel.x * friction) * 1000) / 1000;
+      let velY = round( (this.vel.y * friction) * 1000) / 1000;
+
+      this.vel = createVector(velX,velY);
+    } else {
+      this.vel.mult(0);
+    }
   }
-}
+  this.acc.mult(0);
+} 
 
 Sphere.prototype.show = function() {
   noStroke();
@@ -338,36 +355,32 @@ Sphere.prototype.collide = function(target) {
 }
 
 Sphere.prototype.bounce = function(target) {
-  
+
   let l_bound = createVector(0,this.pos.y);
   let r_bound = createVector(width,this.pos.y);
   let u_bound = createVector(this.pos.x, height);
   let d_bound = createVector(this.pos.x, 0);
-  let doBounce = false;
   
   if(this.pos.x <= 0) {
-    doBounce = true;
+    this.bouncing = true;
     this.pos.x = 0;
   }
   if(this.pos.x >= width) {
-    doBounce = true;
+    this.bouncing = true;
     this.pos.x = width;
   }
   if(this.pos.y <= 0) {
-    doBounce = true;
+    this.bouncing = true;
     this.pos.y = 0;
   }
-  if(this.pos.y >= height) {z
-    doBounce = true;
+  if(this.pos.y >= height) {
+    this.bouncing = true;
     this.pos.y = height;
   }
   
-  if(doBounce && this.bouncing == false) {
+  if(this.bouncing) {
     let tempVect = this.pos;
     this.vel = createVector(tempVect.y*1,-tempVect.x*1);
-    this.bouncing = true;
-  } 
-  else if(doBounce == false && this.bouncing == true) {
     this.bouncing = false;
   }
 }
