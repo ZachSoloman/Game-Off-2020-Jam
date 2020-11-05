@@ -28,6 +28,7 @@ function deleteUserBySocket(socket) {
   if (sockets.length < 0) 
     for (let i = sockets.length - 1; i >= 0 ; --i) {
       if (sockets[i] == socket) {
+
         username = users[i];
         users.splice(i, 1);
         savedSpheres.splice(i, 1);
@@ -100,11 +101,12 @@ nsp.on('connection', function(socket) {
 	  }
 	});
 	socket.on('disconnect', function() {
-	  console.log('Got disconnect!');
+
 	  if (username != "") {
 	    var username = deleteUserBySocket(socket);
 	    /* send disconnect to clients */
 	    io.of('/moonshot').in("room-1").emit('userDisconnect', username);
+	    	  console.log('Got disconnect! '+username);
 	  }
 	});
 });
