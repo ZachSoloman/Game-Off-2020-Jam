@@ -75,5 +75,5 @@ nsp.on('connection', function(socket) {
 	// });
 });
 
-const port = 3000;//process.env.PORT || 3000
+const port = 80;
 http.listen(port, () => console.log(`Listening on port ${port}...`));
