@@ -5,54 +5,76 @@ let Star = { x:[],y:[],r:[] };
 
 function setup() {
   createCanvas( 800, 600);
-  
-  for(let s = 0; s < star_count; s++) {
+  for (let i = 0; i < star_count; i++) {
     let randX = random(width);
     let randY = random(height);
     let randR = random(1,3);
     let star = { x:randX,y:randY,r:randR };
-      Stars.push(star);
+    Stars.push(star);
   }
-  
 }
 
-function createSphere( name,colorName,color ) {
-  let new_planet = new Sphere(name,""+colorName+"_planet",100,100,50,color);//,sun);
-    Spheres.push(new_planet);
-  let new_moon = new Sphere(name,""+colorName+"_moon",new_planet.x,new_planet.y,15,color,new_planet);
-    Spheres.push(new_moon);
+function clearSpheres() {
+  Spheres = [];
+}
+
+function createSphere(name, colorName, color) {
+  let new_planet = 
+	new Sphere(
+		name,
+		""+colorName+"_planet",
+		100,
+		100,
+		50,
+		color
+	);
+  Spheres.push(new_planet);
+  let new_moon = 
+	new Sphere(
+		name,
+		""+colorName+"_moon",
+		new_planet.x,
+		new_planet.y,
+		15,
+		color,
+		new_planet
+	);
+  Spheres.push(new_moon);
 }
 
 function draw() {
+  /* initialize */
   angleMode(RADIANS);
   frameRate(30);
   background(15);
-  
+  /* draw stars */
   push();
-  for(let s = 0; s < Stars.length; s++) {
+  for (let i = 0; i < Stars.length; i++) {
     fill(255);
-    circle(Stars[s].x,Stars[s].y,Stars[s].r);
+    circle(Stars[i].x,Stars[i].y,Stars[i].r);
   }
   pop();
-  
-  for(var i = 0; i < Spheres.length; i++){
-    var s = Spheres[i];
-    if(s != null) {
-      if(s.type.includes("planet")) {
-        s.update(Spheres[0]);
-      } else {
-        s.update(Spheres[i-1]);
+  /* update, draw, and control planets */
+  for (var i = 0; i < Spheres.length; i++) {
+    var sphere = Spheres[i];
+    if (sphere != null) {
+      if(sphere.type.includes("planet")) {
+        sphere.update(Spheres[0]);
       }
-        s.show();
-        s.control();
-        s.behaviors();
+      else {
+        sphere.update(Spheres[i-1]);
+      }
+      sphere.show();
+      sphere.control();
+      sphere.behaviors();
 
-      if(s.name == user) {
-        let tempData = s.copyData();
+      if (sphere.name == socket_GetUser()) {
+        let tempData = sphere.copyData();
         tempData.id = i;
-        saveSphereData( tempData );
-      //} else {
-      //  retrieveSphereData( i );
+        saveSphereData(tempData);
+      }
+      else {
+        retrieveSphereData(i);
       }
     }
   }

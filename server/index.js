@@ -66,13 +66,13 @@ nsp.on('connection', function(socket) {
 	  savedSpheres[data.data.id] = data;
 	  io.of('/moonshot').in("room-1").emit('loadData', savedSpheres[data.data.id] );
 	});
-	// socket.on('retrieveData', function(id) {
-	//   //console.log(data.data.posX);
-	//   //console.log(savedSpheres[id].data.id);
-	//   	if( savedSpheres[id] != undefined ) {
-	//   		socket.emit('loadData', savedSpheres[id] );
-	// 	}
-	// });
+	socket.on('retrieveData', function(id) {
+	  //console.log(data.data.posX);
+	  //console.log(savedSpheres[id].data.id);
+	  if( savedSpheres[id] != undefined ) {
+	    socket.emit('loadData', savedSpheres[id] );
+	  }
+	});
 });
 
 const port = 80;

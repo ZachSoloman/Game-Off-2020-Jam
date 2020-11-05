@@ -2,13 +2,28 @@
 var socket = io('/moonshot');
 var user = "";
 var room;
-var colorNames = ["red","blue","green","purple","yellow"];
-var colors = [[255,0,0,255],[0,0,255,255],[0,255,0,255],[255,128,0,255],[255,255,0,255]];
+var user_colors = 
+	[
+		{name:"red", color:[255,0,0,255]},
+		{name:"blue", color:[0,0,255,255]},
+		{name:"green", color:[0,255,0,255]},
+		{name:"purple", color:[255,128,0,255]},
+		{name:"yellow", color:[255,255,0,255]}
+	]
+
+/* External */
+
+function socket_GetUser() {
+  return user;
+}
+
+/* Internal */
 
 /* load existing users supplied from the server */
 function loadUsers(users) {
+  clearSpheres();
   for (let u = 0; u < users.length; u++) {
-    createSphere( users[u], colorNames[u], colors[u] );
+    createSphere(users[u], user_colors[u%user_colors.length].name, user_colors[u%user_colors.length].color);
   }
 }
 
@@ -52,7 +67,8 @@ socket.on('userExists', function(data) {
 
 socket.on('userSet', function(data) {
   user = data.username;
-  //createSphere( user, colorNames[data.users.length-1], colors[data.users.length-1]);
+  // let color_index = (data.users.length - 1) % colorNames.length;
+  // createSphere(user, user_colors[color_index].name, user_colors[color_index].color);
   loadUsers(data.users);
   document.getElementById('login').innerHTML = 
    '<div id = "message-container"></div> \
@@ -60,8 +76,8 @@ socket.on('userSet', function(data) {
 	<input type = "text" id = "message"> \
 	<button type = "button" name = "sendbutton" onclick = "sendMessage()">Send</button> \
     </div> \
-    <div>' /* \
-	<button style="width:'+100+'%; padding:'+4+'px;" type = "button" name = "playbutton" onclick = "play()">Play</button> \
+    <div>'
+/*	<button style="width:'+100+'%; padding:'+4+'px;" type = "button" name = "playbutton" onclick = "play()">Play</button> \
     </div> */
   ;
 });
@@ -91,4 +107,4 @@ socket.on('loadData', function(data) {
   && data != undefined) {
     Spheres[data.data.id].readData(data.data);
   }
-}); 
+});
