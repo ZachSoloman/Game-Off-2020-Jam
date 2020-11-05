@@ -1,3 +1,4 @@
+
 const fs = require('fs');
 const express = require('express');
 const path = require('path');
@@ -18,22 +19,43 @@ app.get('/', (req, res) => {
 var io = require('socket.io')(http);
 var nsp = io.of('/moonshot');
 var roomnum = 1;
+var sockets = [];
 var users = [];
 var savedSpheres = [];
 
+function deleteUserBySocket(socket) {
+  for (let i = sockets.length - 1; i >= 0 ; --i) {
+    if (sockets[i] == socket) {
+      users.splice(i, 1);
+      savedSpheres.splice(i, 1);
+      sockets.splice(i, 1);
+    }
+  }
+}
+
+function userOfNameExists(name) {
+  for (let i = 0; i < users.length; ++i) {
+    if (users[i].username == name)
+      return true;
+  }
+  return false;
+}
+
 nsp.on('connection', function(socket) {
-	//console.log('A user connected');
+	console.log('A user connected');
 
 	socket.join("Lobby");
 	socket.emit('setRoom', { room: 'Lobby'} );
 	io.of('/moonshot').in('Lobby').emit('hi', {users:users,message:'Welcome to the lobby!'});
 
 	socket.on('setUsername', function(data) {	  
-	  if(users.indexOf(data) > -1) {
+	  if (userOfNameExists(data)) {
 	     socket.emit('userExists', data + ' username is taken! Try some other username.');
-	  } else {
-	     users.push(data);
-	     socket.emit('userSet', {username: data, users:users });
+	  } 
+	  else {
+	        users.push(data);
+	        sockets.push(socket);
+	        socket.emit('userSet', {username: data, users:users });
 		if(io.nsps['/moonshot'].adapter.rooms["room-"+roomnum] 
 			&& io.nsps['/moonshot'].adapter.rooms["room-"+roomnum].length > 1) 
 				roomnum++;
@@ -69,9 +91,13 @@ nsp.on('connection', function(socket) {
 	socket.on('retrieveData', function(id) {
 	  //console.log(data.data.posX);
 	  //console.log(savedSpheres[id].data.id);
-	  if( savedSpheres[id] != undefined ) {
+	  if(savedSpheres[id] != undefined) {
 	    socket.emit('loadData', savedSpheres[id] );
 	  }
+	});
+	socket.on('disconnect', function() {
+	  console.log('Got disconnect!');
+	  deleteUserBySocket(socket);
 	});
 });
 
