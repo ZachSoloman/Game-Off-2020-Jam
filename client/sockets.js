@@ -23,7 +23,8 @@ function socket_GetUser() {
 function loadUsers(users) {
   clearSpheres();
   for (let u = 0; u < users.length; u++) {
-    createSphere(users[u], user_colors[u%user_colors.length].name, user_colors[u%user_colors.length].color);
+    createSphere(users[u], user_colors[u % user_colors.length].name, 
+		 user_colors[u % user_colors.length].color);
   }
 }
 
@@ -107,4 +108,11 @@ socket.on('loadData', function(data) {
   && data != undefined) {
     Spheres[data.data.id].readData(data.data);
   }
+});
+
+socket.on('userDisconnect', function(username) {
+  if (Spheres.length > 0)
+    for (let i = Spheres.length - 1; i >= 0 ; --i)
+      if (Spheres[i].name == username && username != user)
+        Spheres.splice(i, 1);
 });

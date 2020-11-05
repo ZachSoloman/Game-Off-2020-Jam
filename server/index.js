@@ -24,13 +24,17 @@ var users = [];
 var savedSpheres = [];
 
 function deleteUserBySocket(socket) {
-  for (let i = sockets.length - 1; i >= 0 ; --i) {
-    if (sockets[i] == socket) {
-      users.splice(i, 1);
-      savedSpheres.splice(i, 1);
-      sockets.splice(i, 1);
+  var username = "";
+  if (sockets.length < 0) 
+    for (let i = sockets.length - 1; i >= 0 ; --i) {
+      if (sockets[i] == socket) {
+        username = users[i];
+        users.splice(i, 1);
+        savedSpheres.splice(i, 1);
+        sockets.splice(i, 1);
+      }
     }
-  }
+  return username;
 }
 
 function userOfNameExists(name) {
@@ -57,8 +61,8 @@ nsp.on('connection', function(socket) {
 	        sockets.push(socket);
 	        socket.emit('userSet', {username: data, users:users });
 		if(io.nsps['/moonshot'].adapter.rooms["room-"+roomnum] 
-			&& io.nsps['/moonshot'].adapter.rooms["room-"+roomnum].length > 1) 
-				roomnum++;
+		&& io.nsps['/moonshot'].adapter.rooms["room-"+roomnum].length > 1) 
+			roomnum++;
 		socket.join("room-"+roomnum);
 		socket.emit('setRoom', { room: "room-"+roomnum} );
 
@@ -75,8 +79,8 @@ nsp.on('connection', function(socket) {
 	});
 	socket.on('getRoom', function(data) {
 		if(io.nsps['/moonshot'].adapter.rooms["room-"+roomnum] 
-			&& io.nsps['/moonshot'].adapter.rooms["room-"+roomnum].length > 1) 
-				roomnum++;
+		&& io.nsps['/moonshot'].adapter.rooms["room-"+roomnum].length > 1) 
+			roomnum++;
 		socket.join("room-"+roomnum);
 		socket.emit('setRoom', { room: "room-"+roomnum} );
 
@@ -86,7 +90,7 @@ nsp.on('connection', function(socket) {
 	socket.on('saveData', function(data) {
 	  //console.log(data.data.posX);
 	  savedSpheres[data.data.id] = data;
-	  io.of('/moonshot').in("room-1").emit('loadData', savedSpheres[data.data.id] );
+	  io.of('/moonshot').in("room-1").emit('loadData', savedSpheres[data.data.id]);
 	});
 	socket.on('retrieveData', function(id) {
 	  //console.log(data.data.posX);
@@ -97,7 +101,11 @@ nsp.on('connection', function(socket) {
 	});
 	socket.on('disconnect', function() {
 	  console.log('Got disconnect!');
-	  deleteUserBySocket(socket);
+	  if (username != "") {
+	    var username = deleteUserBySocket(socket);
+	    /* send disconnect to clients */
+	    io.of('/moonshot').in("room-1").emit('userDisconnect', username);
+	  }
 	});
 });
 
