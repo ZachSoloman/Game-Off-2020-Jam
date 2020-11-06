@@ -51,13 +51,13 @@ function Sphere(name,type, x, y, r, color, parent) {
   this.orbit = {
     x:60,y:60,
     radius:60,period:0,
-    speed:100,speed_inc:0.1,maxspeed:16,
+    speed:100,speed_inc:1,maxspeed:12,
     dir:1,offset:0
   };
   
   this.toss = {
     firing_stage:"idle",
-    initial_force:20,force:20,
+    initial_force:10,force:10,
     inc:0.25,
     maxspeed:20,maxforce:1
   };
@@ -72,7 +72,7 @@ Sphere.prototype.start = function() {
     if(this.type == "red_planet") {this.orbit.offset = PI;}
   }
   if (this.type.includes( "moon" ) ) {
-    this.orbit = {x:60,y:60,radius:60,period:0,speed:4,speed_inc:0.5,maxspeed:16,dir:1,offset:0};
+    this.orbit = {x:60,y:60,radius:60,period:0,speed:4,speed_inc:1,maxspeed:12,dir:1,offset:0};
   }
 }
 
@@ -81,44 +81,42 @@ Sphere.prototype.control = function() {
   let firing = false;
   
   if (this.name == socket_GetUser()) {
-    if (keyIsDown (SHIFT)) {
-      firing = true;
-    } // if `z` key is pressed
-    else if (keyIsDown(90)) {
-      this.toss.firing_stage = "idle";
-      this.vel.mult(0);
-      this.toss.force = this.toss.initial_force;
-    }
-    if (firing) {
-      if(this.toss.firing_stage == "idle") {
-        this.toss.firing_stage = "charging";
+    if( this.type.includes("moon")) {
+      if (keyIsDown (SHIFT)) {
+        firing = true;
+      } // if `control` key is pressed
+      else if (keyIsDown(CONTROL)) {
+        this.toss.firing_stage = "idle";
+        this.vel.mult(0);
+        this.toss.force = this.toss.initial_force;
       }
-      if(this.toss.firing_stage == "charging") {
-        if(this.orbit.speed <= this.orbit.maxspeed){
-          this.orbit.speed += this.orbit.speed_inc;
-          this.toss.force += this.toss.inc;
+      if (firing) {
+        if(this.toss.firing_stage == "idle") {
+          this.toss.firing_stage = "charging";
         }
+        if(this.toss.firing_stage == "charging") {
+          if(this.orbit.speed <= this.orbit.maxspeed){
+            this.orbit.speed += this.orbit.speed_inc;
+            this.toss.force += this.toss.inc;
+          }
+        }
+      } 
+      else {
+        if(this.toss.firing_stage == "charging") {
+          this.toss.firing_stage = "released";
+          this.orbit.speed = 1;
+          this.orbit.dir *= -1;
+        }      
       }
-      if(this.toss.firing_stage == "released" ||
-        this.toss.firing_stage == "bouncing") {
-        this.toss.firing_stage = "charging";
-       this.vel.mult(0.5);
-       this.toss.force = this.toss.initial_force;
-      }
-    } 
-    else {
-      if(this.toss.firing_stage == "charging") {
-        this.toss.firing_stage = "released";
-        this.orbit.speed = 1;
-        this.orbit.dir *= -1;
-      }      
     }
   
-  // move in direction if `a`, `w`, `s`, or `d` is pressed (ascii char value)
-    if (keyIsDown(65)) this.vel.x -= this.speed;
-    if (keyIsDown(68)) this.vel.x += this.speed;
-    if (keyIsDown(87)) this.vel.y -= this.speed;
-    if (keyIsDown(83)) this.vel.y += this.speed;
+   // move in direction if `a`, `w`, `s`, or `d` is pressed (ascii char value)
+    if( this.type.includes("planet")) {
+      if (keyIsDown(65)) this.vel.x -= this.speed;
+      if (keyIsDown(68)) this.vel.x += this.speed;
+      if (keyIsDown(87)) this.vel.y -= this.speed;
+      if (keyIsDown(83)) this.vel.y += this.speed;
+    }
   }
 }
 
@@ -130,17 +128,16 @@ Sphere.prototype.copyData = function() {
   allData.type = this.type;
   allData.x = this.x;
   allData.y = this.y;
-  allData.targetX = this.target.x;  
-  allData.targetY = this.target.y;    
   allData.colorR = this.color.r;
   allData.colorG = this.color.g;
   allData.colorB = this.color.b;
-  allData.colorA= this.color.a;  
+  allData.colorA = this.color.a; 
+  allData.targetX = this.target.x;  
+  allData.targetY = this.target.y; 
   allData.posX = this.pos.x;
   allData.posY = this.pos.y;
   allData.velX = this.vel.x;
   allData.velY = this.vel.y;
-  // allData.acc = this.acc;
   allData.speed = this.speed;
   allData.maxspeed = this.maxspeed;
   allData.maxforce = this.maxforce;
@@ -169,34 +166,23 @@ Sphere.prototype.copyData = function() {
 
 Sphere.prototype.readData = function( inData ) {
   
-  //console.log(inData.name);
   this.name = inData.name;
   this.type = inData.type;
   this.x = inData.x;
   this.y = inData.y;
-  this.target = createVector(inData.targetX,inData.targetY);
-  // this.target.x = inData.targetX;  
-  // this.target.y = inData.targetY;
-  // this.target.z = 0;
   this.color.r = inData.colorR;
   this.color.g = inData.colorG;
   this.color.b = inData.colorB;
   this.color.a = inData.colorA;
+  this.target = createVector(inData.targetX,inData.targetY);
   this.pos = createVector(inData.posX,inData.posY);  
-  // this.pos.x = inData.posX;
-  // this.pos.y = inData.posY;
-  // this.pos.z = 0;
-  this.vel = createVector(inData.velX,inData.velY);    
-  // this.vel.x = inData.velX;
-  // this.vel.y = inData.velY;
-  // this.vel.z = 0;
-  //this.acc = createVector(0,0);
+  this.vel = createVector(inData.velX,inData.velY);
   this.speed = inData.speed;
   this.maxspeed = inData.maxspeed;
   this.maxforce = inData.maxforce;
   this.friction = inData.friction;
   this.r = inData.r;
-  // inData.parent = inData.parent;
+  //this.parent = inData.parent;
   this.orbit.x = inData.orbitX;
   this.orbit.y = inData.orbitY;
   this.orbit.radius = inData.orbitR;
@@ -225,22 +211,20 @@ Sphere.prototype.behaviors = function() {
     //this.applyForce(arrive);
   }
   if(this.type.includes( "moon" ) ) {
-    if(this.toss.firing_stage == "released") {
-      point_of_force = createVector(this.target.x,this.target.y);
-      shoot = this.shoot(point_of_force);
-      shoot.mult( -this.toss.force );
-      this.applyForce(shoot);
-      this.toss.firing_stage = "bouncing";
-    } 
-    else if( this.toss.firing_stage == "idle" ||
+    if( this.toss.firing_stage == "idle" ||
       this.toss.firing_stage == "charging") {
-      arrive.mult(1);
-      this.applyForce(arrive);
-    } 
-    else if(this.toss.firing_stage == "bouncing" || 
-      this.toss.firing_stage == "idle") {
-      if(!this.bouncing)
-        this.bounce();
+
+    } else if(this.toss.firing_stage == "released") {
+
+      let invert = createVector( this.parent.pos.y -this.parent.pos.x);
+      let perpendicular = p5.Vector.sub( this.target, this.parent.pos);
+
+      this.vel = createVector( perpendicular.y * -this.orbit.dir, -perpendicular.x * -this.orbit.dir);
+      this.vel.limit( this.toss.maxspeed);
+
+      this.toss.firing_stage = "bouncing";
+    } else if(this.toss.firing_stage == "bouncing") {
+      this.bounce();
     }
   } 
 }
@@ -249,24 +233,23 @@ Sphere.prototype.applyForce = function(f) {
   this.acc.add(f);
 }
 
-Sphere.prototype.update = function(e) {
-  
+Sphere.prototype.updateTarget = function( target ) {
   if(this.type.includes("planet")) {
-    this.parent = e || {};
+    this.parent = target || {};
     this.orbit.period += TWO_PI / this.orbit.radius;
     this.target = createVector(this.x,this.y);
     this.target = createVector(
       this.parent.pos.x + ((sin((this.orbit.period+this.orbit.offset)
-			    * this.orbit.dir) * this.orbit.x)), 
+          * this.orbit.dir) * this.orbit.x)), 
       this.parent.pos.y + ((cos((this.orbit.period+this.orbit.offset)
-			    * this.orbit.dir) * this.orbit.y))
+          * this.orbit.dir) * this.orbit.y))
     );
   }
   
   if(this.type.includes("moon") ) {
     if(this.toss.firing_stage == "idle" ||
       this.toss.firing_stage == "charging") {
-      this.parent = e || {};
+      this.parent = target || {};
       this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
   
       this.target = createVector(
@@ -275,14 +258,28 @@ Sphere.prototype.update = function(e) {
       );
     }
   }
+}
+
+Sphere.prototype.update = function(e) {
   
+  this.updateTarget(e);
+  
+  if(this.type.includes("moon") ) {
+    if(this.toss.firing_stage == "idle" 
+      || this.toss.firing_stage == "charging") {
+      this.pos = this.target;
+    }
+  }
+
   this.pos.add(this.vel);
   this.vel.add(this.acc);
-  if(this.type.includes("planet") ) {//friction
+
+  //applies friction to sphere velocity 'this.vel'
+  if(this.type.includes("planet") ) {
     let mag = this.vel.mag();
-    let friction = 1 - this.friction;
 
     if( mag > 0.1) {
+      let friction = 1 - this.friction;
       let velX = round( (this.vel.x * friction) * 1000) / 1000;
       let velY = round( (this.vel.y * friction) * 1000) / 1000;
 
@@ -291,6 +288,7 @@ Sphere.prototype.update = function(e) {
       this.vel.mult(0);
     }
   }
+
   this.acc.mult(0);
 } 
 
@@ -309,7 +307,6 @@ Sphere.prototype.show = function() {
   if(this.type.includes("moon")) {
     //text(this.toss.firing_stage,this.pos.x, this.pos.y);
   }
-  //text(""+round(this.pos.x)+" | "+round(this.pos.y),this.pos.x, this.pos.y);
 }
 
 Sphere.prototype.arrive = function(target) {
@@ -333,12 +330,12 @@ Sphere.prototype.shoot = function(target) {
   var d = desired.mag();
   var steer = createVector(0,0);
   
-  if(d < 300) {
+  //if(d < 300) {
     desired.setMag(this.toss.maxspeed);
     desired.mult(-1);
     steer = p5.Vector.sub(desired,this.vel);
     steer.limit(this.toss.maxforce);
-  }
+  //}
   return steer;
 }
 
@@ -361,26 +358,25 @@ Sphere.prototype.bounce = function(target) {
   let u_bound = createVector(this.pos.x, height);
   let d_bound = createVector(this.pos.x, 0);
   
-  if(this.pos.x <= 0) {
+  let w = this.r / 2;
+
+  if(this.pos.x <= w ) {
     this.bouncing = true;
-    this.pos.x = 0;
   }
-  if(this.pos.x >= width) {
+  if(this.pos.x >= width - w) {
     this.bouncing = true;
-    this.pos.x = width;
   }
-  if(this.pos.y <= 0) {
+  if(this.pos.y <= w) {
     this.bouncing = true;
-    this.pos.y = 0;
   }
-  if(this.pos.y >= height) {
+  if(this.pos.y >= height - w) {
     this.bouncing = true;
-    this.pos.y = height;
   }
   
   if(this.bouncing) {
-    let tempVect = this.pos;
-    this.vel = createVector(tempVect.y*1,-tempVect.x*1);
+    let tempVect = this.vel;
+    let addAcc = createVector(tempVect.y*1,-tempVect.x*1);
+    this.vel = addAcc;
     this.bouncing = false;
   }
 }

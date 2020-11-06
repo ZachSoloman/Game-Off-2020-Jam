@@ -10,7 +10,14 @@ var user_colors =
 		{name:"purple", color:[255,128,0,255]},
 		{name:"yellow", color:[255,255,0,255]}
 	]
-
+var user_start_positions = 
+  [
+    {x:100,y:100},
+    {x:500,y:500},
+    {x:100,y:100},
+    {x:100,y:100},
+    {x:100,y:100},
+  ]
 /* External */
 
 function socket_GetUser() {
@@ -25,7 +32,17 @@ function loadUsers(users) {
   clearSpheres();
   for (let u = 0; u < users.length; u++) {
     createSphere(users[u], user_colors[u % user_colors.length].name, 
-		 user_colors[u % user_colors.length].color);
+		 user_colors[u % user_colors.length].color,
+      user_start_positions[u % user_start_positions.length]);
+  }
+}
+
+/* update existing users on the server to the client*/
+function updateUsers(users) {
+  for (let s = 0; s < Spheres.length; u++) {
+    for (let u = 0; u < users.length; u++) {
+
+    }
   }
 }
 
@@ -67,7 +84,7 @@ function play() {
 socket.on('hi',function(data) {
   if(document.getElementById('error-container'))
     document.getElementById('error-container').innerHTML = data.message;
-  loadUsers(data.users);
+  //loadUsers(data.users);
 });
 
 socket.on('userExists', function(data) {
@@ -76,9 +93,7 @@ socket.on('userExists', function(data) {
 
 socket.on('userSet', function(data) {
   user = data.username;
-  // let color_index = (data.users.length - 1) % colorNames.length;
-  // createSphere(user, user_colors[color_index].name, user_colors[color_index].color);
-  loadUsers(data.users);
+  //loadUsers(data.users);
   document.getElementById('login').innerHTML = 
    '<div id = "message-container"></div> \
     <div> \
@@ -110,7 +125,6 @@ socket.on('spawnAll', function(data) {
 }); 
 
 socket.on('loadData', function(data) {
-  //console.log(data);
   if(data.data.id < Spheres.length 
   && data.data.name != user 
   && data != undefined) {

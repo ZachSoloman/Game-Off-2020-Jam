@@ -18,13 +18,13 @@ function clearSpheres() {
   Spheres = [];
 }
 
-function createSphere(name, colorName, color) {
+function createSphere(name, colorName, color, start_position) {
   let new_planet = 
 	new Sphere(
 		name,
 		""+colorName+"_planet",
-		100,
-		100,
+		start_position.x,
+		start_position.y,
 		50,
 		color
 	);
@@ -58,13 +58,11 @@ function draw() {
   for (var i = 0; i < Spheres.length; i++) {
     var sphere = Spheres[i];
     if (sphere != null) {
-      if(sphere.type.includes("planet")) {
+      if(sphere.type.includes("planet"))
         sphere.update(Spheres[0]);
-      }
-      else {
+      else
         sphere.update(Spheres[i-1]);
-      }
-      sphere.show();
+
       sphere.control();
       sphere.behaviors();
 
@@ -76,6 +74,8 @@ function draw() {
       else {
         retrieveSphereData(i);
       }
+
+      sphere.show();     
     }
   }
 }

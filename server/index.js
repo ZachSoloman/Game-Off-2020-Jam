@@ -39,8 +39,9 @@ function deleteUserBySocket(socket) {
 }
 
 function userOfNameExists(name) {
+	console.log(name);
   for (let i = 0; i < users.length; ++i) {
-    if (users[i].username == name)
+    if (users[i] == name)
       return true;
   }
   return false;
@@ -53,7 +54,7 @@ nsp.on('connection', function(socket) {
 	socket.emit('setRoom', { room: 'Lobby'} );
 	io.of('/moonshot').in('Lobby').emit('hi', {users:users,message:'Welcome to the lobby!'});
 
-	socket.on('setUsername', function(data) {	  
+	socket.on('setUsername', function(data) { 
 	  if (userOfNameExists(data)) {
 	     socket.emit('userExists', data + ' username is taken! Try some other username.');
 	  } 
@@ -69,7 +70,8 @@ nsp.on('connection', function(socket) {
 
 		console.log(''+data+' joined room '+roomnum);
 		io.of('/moonshot').in("room-"+roomnum).emit('newmsg', { user: data, message: ' joined Room #'+roomnum});
-		socket.to("room-"+roomnum).emit('spawnAll', {username: data, users:users });  
+		
+		io.of('/moonshot').to("room-"+roomnum).emit('spawnAll', {username: data, users:users });  
 	  }
 
 	  console.log(users);
