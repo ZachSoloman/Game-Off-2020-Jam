@@ -59,19 +59,18 @@ function draw() {
     circle( (Stars[i].x + (Star_scroll*Stars[i].r)) % width,Stars[i].y,Stars[i].r);
   }
   pop();
-
   /* update, draw, and control planets */
   for (var i = 0; i < Spheres.length; i++) {
     var sphere = Spheres[i];
     if (sphere != null) {
-      if(sphere.type.includes("planet"))
-        sphere.update(Spheres[0]);
+      if (sphere.type.includes("_planet"))
+  	sphere.update(Spheres[0]);
       else
         sphere.update(Spheres[i-1]);
-
+  
       sphere.control();
       sphere.behaviors();
-
+  
       if (sphere.name == socket_GetUser() ) {
         let tempData = sphere.copyData();
         tempData.id = i;
@@ -80,7 +79,7 @@ function draw() {
       else {
         retrieveSphereData( sphere.name, sphere.type );
       }
-
+  
       sphere.show();     
     }
   }

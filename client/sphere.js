@@ -116,8 +116,6 @@ Sphere.prototype.copyData = function() {
   
   allData.name = this.name;
   allData.type = this.type;
-  allData.x = this.x;
-  allData.y = this.y;
   allData.colorR = this.color.r;
   allData.colorG = this.color.g;
   allData.colorB = this.color.b;
@@ -157,8 +155,6 @@ Sphere.prototype.readData = function( inData ) {
   
   this.name = inData.name;
   this.type = inData.type;
-  this.x = inData.x;
-  this.y = inData.y;
   this.color.r = inData.colorR;
   this.color.g = inData.colorG;
   this.color.b = inData.colorB;
@@ -199,7 +195,6 @@ Sphere.prototype.behaviors = function() {
   }
   if(this.type.includes( "moon" ) ) {
     if( this.toss.firing_stage == "orbiting") {
-
     } else if(this.toss.firing_stage == "charging") {
 
     } else if(this.toss.firing_stage == "released") {
@@ -233,15 +228,15 @@ Sphere.prototype.updateTarget = function( target ) {
   }
   
   if(this.type.includes("moon") ) {
-    // if(this.toss.firing_stage == "orbiting"
-    //   || this.toss.firing_stage == "charging" 
-    //   || this.toss.firing_stage == "returning" ) {
+    //if (this.toss.firing_stage == "orbiting"
+    //|| this.toss.firing_stage == "charging" 
+    //|| this.toss.firing_stage == "returning" ) {
       this.orbit.body = target || {};
       this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
   
       this.target = createVector(
-        this.orbit.body.pos.x + ( (sin(this.orbit.period) * this.orbit.radius) ), 
-        this.orbit.body.pos.y + ( (cos(this.orbit.period) * this.orbit.radius) )
+        this.parent.pos.x + ( (cos(this.orbit.period) * this.orbit.radius) ), 
+        this.parent.pos.y + ( (sin(this.orbit.period) * this.orbit.radius) )
       );
     //}
   }
@@ -254,6 +249,8 @@ Sphere.prototype.update = function(e) {
   if(this.type.includes("moon") ) {
     if(this.toss.firing_stage == "orbiting" 
       || this.toss.firing_stage == "charging") {
+      this.vel = createVector(0,0);
+      this.acc = createVector(0,0);
       this.pos = createVector(this.target.x, this.target.y);
     }
   }
@@ -352,7 +349,7 @@ Sphere.prototype.arrive = function(target) {
 Sphere.prototype.shoot = function(target) {
   let invert = createVector( this.orbit.body.pos.y -this.orbit.body.pos.x);
   let perpendicular = p5.Vector.sub( this.target, this.orbit.body.pos);
-  let outVel = createVector( perpendicular.y * -this.orbit.dir, -perpendicular.x * -this.orbit.dir).normalize();
+  let outVel = createVector( perpendicular.y * this.orbit.dir, -perpendicular.x * this.orbit.dir).normalize();
   this.vel = createVector( outVel.x * this.toss.force, outVel.y * this.toss.force);
   this.vel.limit( this.toss.maxforce );
 
