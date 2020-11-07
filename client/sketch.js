@@ -4,7 +4,7 @@ let Stars = [];
 let Star = { x:[],y:[],r:[] };
 let Star_scroll = 0;
 
-let w = 800;
+let w = 900;
 let h = 600;
 
 function setup() {

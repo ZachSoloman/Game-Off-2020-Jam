@@ -240,6 +240,8 @@ Sphere.prototype.behaviors = function() {
       this.applyForce(arrive);
     }
   }
+
+  this.recurse();
 }
 
 Sphere.prototype.applyForce = function(f) {
@@ -307,20 +309,55 @@ Sphere.prototype.update = function(e) {
 } 
 
 Sphere.prototype.show = function() {
-  noStroke();
+ 
+  /* draw copies of player sphere on recursion of screen */
+  let halfR = this.r/2;
+
+  let drawX = [
+    map( this.pos.x-width, -width, 0, -width, 0),
+    this.pos.x,
+    map( this.pos.x+width, 0, width, 0, width),
+    map( this.pos.x-width, -width, 0, -width, 0),
+    this.pos.x,
+    map( this.pos.x+width, 0, width, 0, width),
+    map( this.pos.x-width, -width, 0, -width, 0),
+    this.pos.x,
+    map( this.pos.x+width, 0, width, 0, width)
+  ];
+  let drawY = [
+    map(this.pos.y-height, -(height*2), 0, -(height*2), 0),
+    map(this.pos.y-height, -(height*2), 0, -(height*2), 0),
+    map(this.pos.y-height, -(height*2), 0, -(height*2), 0),
+    this.pos.y,
+    this.pos.y,  
+    this.pos.y,
+    map(this.pos.y+height, height, height*2, height, height*2),
+    map(this.pos.y+height, height, height*2, height, height*2),
+    map(this.pos.y+height, height, height*2, height, height*2)
+  ];
+
+  let copies = 9;
+
+  // if(this.pos.x > width - halfR && this.pos.x < width){ copies++;}
+  // if(this.pos.x < halfR && this.pos.x > 0){ copies++;}
+  // if(this.pos.y > height - halfR && this.pos.y < height){ copies++;}
+  // if(this.pos.y < halfR && this.pos.y > 0){ copies++;}
+
   push();
-  
-  fill(this.color);
-  circle(this.pos.x, this.pos.y, this.r);
-  
-  fill(255);
-  textAlign(CENTER);
-  if(this.type.includes("planet")) {
-    text(this.name,this.pos.x, this.pos.y);
+  noStroke(); 
+  for(let c = 0; c < copies; c++) {
+
+    fill(this.color);
+    circle( drawX[c], drawY[c], this.r);
+    
+    fill(255);
+    textAlign(CENTER);
+
+    if(this.type.includes("planet")) {
+      text( this.name, drawX[c], drawY[c]);
+    }
   }
-  if(this.type.includes("moon")) {
-    //text(this.toss.firing_stage,this.pos.x, this.pos.y);
-  }
+  pop();
 }
 
 Sphere.prototype.arrive = function(target) {
@@ -350,6 +387,22 @@ Sphere.prototype.shoot = function(target) {
 
   this.toss.firing_stage = "loose";
   this.toss.force = this.toss.initial_force;
+}
+
+Sphere.prototype.recurse = function(target) {
+  let edgetuck = 0;//this.r/2;
+  if(  this.pos.x < -edgetuck ) {
+    this.pos.x = width + edgetuck;
+  }
+  if( this.pos.x > width + edgetuck) {
+    this.pos.x = -edgetuck;
+  } 
+  if(  this.pos.y < -edgetuck) {
+    this.pos.y = height + edgetuck;
+  }
+  if( this.pos.y > height + edgetuck) {
+    this.pos.y = -edgetuck;
+  }
 }
 
 Sphere.prototype.bounce = function(target) {
