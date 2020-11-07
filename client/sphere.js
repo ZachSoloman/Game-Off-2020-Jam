@@ -9,10 +9,12 @@ function Sphere(name,type, x, y, r, color, parent) {
   this.pos = createVector(x,y);
   this.vel = createVector();
   this.acc = createVector();
+  /* speed -> how fast can this reach maxspeed? */
   this.speed = 1.5;
   this.maxspeed = 6;
   this.maxforce = 1;
   this.friction = 0.1;
+  /* radius */
   this.r = r || 50;
   
   //moon variables
@@ -193,7 +195,7 @@ Sphere.prototype.behaviors = function() {
   let shoot;
   
   if(this.type.includes("planet")) {
-
+    this.recurse();
   }
   if(this.type.includes( "moon" ) ) {
     if( this.toss.firing_stage == "orbiting") {
@@ -211,7 +213,6 @@ Sphere.prototype.behaviors = function() {
     }
   }
 
-  this.recurse();
 }
 
 Sphere.prototype.applyForce = function(f) {
@@ -253,7 +254,7 @@ Sphere.prototype.update = function(e) {
   if(this.type.includes("moon") ) {
     if(this.toss.firing_stage == "orbiting" 
       || this.toss.firing_stage == "charging") {
-      this.pos = createVector( this.target.x, this.target.y);
+      this.pos = createVector(this.target.x, this.target.y);
     }
   }
 
@@ -376,26 +377,17 @@ Sphere.prototype.recurse = function(target) {
 }
 
 Sphere.prototype.bounce = function(target) {
-
-  let l_bound = createVector(0,this.pos.y);
-  let r_bound = createVector(width,this.pos.y);
-  let u_bound = createVector(this.pos.x, height);
-  let d_bound = createVector(this.pos.x, 0);
   
-  let bouncing = false;
-
-  let w = this.r / 2;
-
-  if(  this.pos.x <= w 
-    || this.pos.x >= width - w 
-    || this.pos.y <= w
-    || this.pos.y >= height - w) {
-    bouncing = true;
-  }
+	let w = this.r / 2;
   
-  if(bouncing) {
-    let tempVect = this.vel;
-    let addAcc = createVector(tempVect.y*1,-tempVect.x*1);
-    this.vel = addAcc;
-  }
+	if (this.pos.x <= w && this.vel.x < 0
+	|| this.pos.x > width - w && this.vel.x > 0) {
+		this.vel = createVector(-(this.vel.x),this.vel.y);
+		this.pos.add(this.vel);
+	}
+	else if (this.pos.y <= w && this.vel.y < 0
+	|| this.pos.y > height - w && this.vel.y > 0) {
+		this.vel = createVector(this.vel.x,-(this.vel.y));
+		this.pos.add(this.vel);
+	}
 }
