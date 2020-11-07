@@ -27,6 +27,14 @@ body {
 }
 
 #login {
-	float:left;
-		clear:both;
+    top: 1px;
+    position: absolute;
+    text-align: left;
+}
+#login div {
+	height: 30px;
+}
+
+#message-container div{
+	height:auto;
 }

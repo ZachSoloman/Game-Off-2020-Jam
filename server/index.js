@@ -21,25 +21,100 @@ var nsp = io.of('/moonshot');
 var roomnum = 1;
 var sockets = [];
 var users = [];
-var savedSpheres = [];
+var rooms = [];
+//var savedSpheres = [];
+var planets = [];
+var moons = [];
+var roomPrefix = "Room ";
 
 function deleteUserBySocket(socket) {
-  var username = "";
-  if (sockets.length < 0) 
+  let userData = {};
+  let userIndex = 0;
+  if (sockets.length > 0) 
     for (let i = sockets.length - 1; i >= 0 ; --i) {
       if (sockets[i] == socket) {
 
-        username = users[i];
+      	userIndex = i;
+
+        userData = { username:users[i], room:rooms[i]};	
         users.splice(i, 1);
-        savedSpheres.splice(i, 1);
         sockets.splice(i, 1);
+        planets.splice(i, 1);
+        moons.splice(i, 1);     
       }
     }
-  return username;
+
+  return userData;
 }
 
+function checkPlanets(name) {
+  for (let i = 0; i < planets.length; ++i) {
+    if (planets[i].name == name)
+      return true;
+  }
+  return false;
+}
+function checkMoons(name) {
+  for (let i = 0; i < moons.length; ++i) {
+    if (moons[i].name == name)
+      return true;
+  }
+  return false;
+}
+function getPlanetByName(name) {
+	let userPlanet = {};
+  	for (let i = 0; i < planets.length; ++i) {
+    	if (planets[i].name == name)
+      		userPlanet = planets[i];
+  	}
+  	return userPlanet;
+}
+function getMoonByName(name) {
+	let userMoon = {};
+  	for (let i = 0; i < moons.length; ++i) {
+    	if (moons[i].name == name)
+      		userMoon = moons[i];
+  	}
+  	return userMoon;
+}
+function checkMoons(name) {
+  for (let i = 0; i < moons.length; ++i) {
+    if (moons[i].name == name)
+      return true;
+  }
+  return false;
+}
+function savePlanets(data) {
+  for (let i = 0; i < planets.length; ++i) {
+    if (planets[i].name == data.name) {
+      planets[i] = data;
+    }
+  }
+}
+function saveMoons(data) {
+  for (let i = 0; i < moons.length; ++i) {
+    if (moons[i].name == data.name) {
+      moons[i] = data;
+    }
+  }
+}
+function removePlanet(name) {
+  for (let i = 0; i < planets.length; ++i) {
+    if (planets[i].name == name) {
+      planets.splice(i, 1);
+    }
+  }
+}
+function removeMoon(name) {
+  for (let i = 0; i < moons.length; ++i) {
+    if (moons[i].name == name) {
+      moons.splice(i ,1);
+    }
+  }
+}
+
+
 function userOfNameExists(name) {
-	console.log(name);
   for (let i = 0; i < users.length; ++i) {
     if (users[i] == name)
       return true;
@@ -58,57 +133,100 @@ nsp.on('connection', function(socket) {
 	  if (userOfNameExists(data)) {
 	     socket.emit('userExists', data + ' username is taken! Try some other username.');
 	  } 
+	  else if(data == "") {
+	     socket.emit('userExists', 'Name must indclude at least one character.');
+	  }
 	  else {
 	        users.push(data);
 	        sockets.push(socket);
-	        socket.emit('userSet', {username: data, users:users });
-		if(io.nsps['/moonshot'].adapter.rooms["room-"+roomnum] 
-		&& io.nsps['/moonshot'].adapter.rooms["room-"+roomnum].length > 1) 
+
+		if(io.nsps['/moonshot'].adapter.rooms[roomPrefix+roomnum] 
+		&& io.nsps['/moonshot'].adapter.rooms[roomPrefix+roomnum].length > 1) 
 			roomnum++;
-		socket.join("room-"+roomnum);
-		socket.emit('setRoom', { room: "room-"+roomnum} );
 
-		console.log(''+data+' joined room '+roomnum);
-		io.of('/moonshot').in("room-"+roomnum).emit('newmsg', { user: data, message: ' joined Room #'+roomnum});
-		
-		io.of('/moonshot').to("room-"+roomnum).emit('spawnAll', {username: data, users:users });  
+		if(!rooms.includes(roomPrefix+roomnum)) {
+			rooms.push(roomPrefix+roomnum);
+		}
+
+		socket.join(roomPrefix+roomnum);
+	    socket.emit('userSet', {username: data, users:users, room:roomPrefix+roomnum});
+
+		nsp.to(roomPrefix+roomnum).emit('newmsg', { user: data, message: ' joined '+roomPrefix+roomnum});
+		nsp.to(roomPrefix+roomnum).emit('spawnAll', {username: data, users:users });
 	  }
-
-	  console.log(users);
 	});
 
 	socket.on('msg', function(data) {
-	  io.of('/moonshot').in(data.room).emit('newmsg', data);
-	});
-	socket.on('getRoom', function(data) {
-		if(io.nsps['/moonshot'].adapter.rooms["room-"+roomnum] 
-		&& io.nsps['/moonshot'].adapter.rooms["room-"+roomnum].length > 1) 
-			roomnum++;
-		socket.join("room-"+roomnum);
-		socket.emit('setRoom', { room: "room-"+roomnum} );
-
-		console.log(''+data.user+' joined room '+roomnum);
-		io.of('/moonshot').in("room-"+roomnum).emit('newmsg', { user: data.user, message: ' joined Room #'+roomnum});
+	  nsp.in(data.room).emit('newmsg', data);
 	});
 	socket.on('saveData', function(data) {
-	  //console.log(data.data.posX);
-	  savedSpheres[data.data.id] = data;
-	  io.of('/moonshot').in("room-1").emit('loadData', savedSpheres[data.data.id]);
+		if(data != undefined) {
+			if(data.data.type.includes('planet')) {
+				if(!checkPlanets(data.data.name)) {
+					planets.push(data.data);
+				}
+				else {			
+					savePlanets(data.data);
+				}
+			}
+			else if(data.data.type.includes('moon')) {
+				if(!checkMoons(data.data.name)) {
+					moons.push(data.data);
+				}
+				else {			
+					saveMoons(data.data);
+				}
+			}
+		}
 	});
-	socket.on('retrieveData', function(id) {
-	  //console.log(data.data.posX);
-	  //console.log(savedSpheres[id].data.id);
-	  if(savedSpheres[id] != undefined) {
-	    socket.emit('loadData', savedSpheres[id] );
-	  }
+	socket.on('retrieveData', function( data ) {
+		if(data != undefined) {
+			if(data.type.includes('planet')) {
+				let myPlanet = getPlanetByName( data.name );
+				socket.emit('loadData', myPlanet);
+			}
+			else if(data.type.includes('moon')) {
+				let myMoon = getMoonByName( data.name );
+				socket.emit('loadData', myMoon);
+			}
+		}
 	});
-	socket.on('disconnect', function() {
+	socket.on('testUserConnections', function(data) {
+		if( !users.includes(data.name) ) {
+	    	/* send disconnect to clients */
+    		nsp.to(data.room).emit('userDisconnect', data.name);
+    		nsp.to(data.room).emit('newmsg', { user: data.name, message: ' disconnected from '+data.room});
+			removePlanet(data.name);
+			removeMoon(data.name);			
+		}
+	});
+	socket.on('debug', function( key ) {
+		switch(key.key) {
+		  case 'rooms':
+		  	console.log('Rooms');
+			console.log(rooms);
+		    break;
+		  case 'users':
+		  	console.log('Users');
+			console.log(users);
+		    break;
+		  case 'planets':
+		  	console.log('Planets');
+			console.log(planets);
+		    break;
+		  case 'moons':
+		  	console.log('Moons');
+			console.log(moons);
+		    break;
+		  default:
+		}
+	});
 
-	  if (username != "") {
-	    var username = deleteUserBySocket(socket);
-	    /* send disconnect to clients */
-	    io.of('/moonshot').in("room-1").emit('userDisconnect', username);
-	    	  console.log('Got disconnect! '+username);
+	socket.on('disconnect', function() {
+	  if (socket != "") {
+	    let socketUserData = deleteUserBySocket(socket);
+
+	    console.log('User '+socketUserData.username+' disconnected');
 	  }
 	});
 });

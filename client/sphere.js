@@ -66,8 +66,6 @@ function Sphere(name,type, x, y, r, color, parent) {
     maxforce:50
   };
 
-  //this.pulled = false;
-
   this.start();
 }
 
@@ -76,6 +74,8 @@ Sphere.prototype.start = function() {
     if(this.type == "red_planet") {this.orbit.offset = PI;}
   }
   if (this.type.includes( "moon" ) ) { 
+    this.speed = this.toss.force;
+    this.maxspeed = this.toss.maxforce;
     this.orbit.isOrbiting = true;
   }
 }
@@ -92,7 +92,7 @@ Sphere.prototype.control = function() {
       if(keyIsDown(CONTROL)) // if `control` key is pressed
         pulling = true;
 
-      if (firing) {
+      if(firing) {
         if(this.toss.firing_stage == "orbiting") {
           this.toss.firing_stage = "charging";
         } else if(this.toss.firing_stage == "charging") {
@@ -101,7 +101,7 @@ Sphere.prototype.control = function() {
           } else if(this.toss.force >= this.toss.maxforce){
             this.toss.force = this.toss.maxforce;
           }
-          console.log( this.toss.force );
+
           this.orbit.speed = map( this.toss.force,
             this.toss.initial_force, this.toss.maxforce,
             this.orbit.initial_speed, this.orbit.maxspeed 
@@ -120,10 +120,12 @@ Sphere.prototype.control = function() {
       }
     }
 
-    if(pulling) {
+    if(pulling && this.toss.firing_stage == "loose") {
       this.toss.firing_stage = "returning";
-      //this.vel.mult(0.5);
+      this.vel.mult(0.25);
       this.toss.force = this.toss.initial_force;
+    } else if( this.toss.firing_stage == "returning" ) {
+      this.toss.firing_stage == "loose"
     }
   
    // move in direction if `a`, `w`, `s`, or `d` is pressed (ascii char value)
@@ -234,7 +236,7 @@ Sphere.prototype.behaviors = function() {
       this.bounce();
     } else if(this.toss.firing_stage == "returning") {
       arrive = this.arrive(this.target);
-      arrive.mult(5);
+      arrive.mult(4);
       this.applyForce(arrive);
     }
   }

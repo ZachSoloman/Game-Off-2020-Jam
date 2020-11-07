@@ -1,13 +1,17 @@
 let Spheres = [];
-let star_count = 45;
+let star_count = 100;
 let Stars = [];
 let Star = { x:[],y:[],r:[] };
+let Star_scroll = 0;
+
+let w = 800;
+let h = 600;
 
 function setup() {
-  createCanvas( 800, 600);
+  createCanvas( w, h);
   for (let i = 0; i < star_count; i++) {
-    let randX = random(width);
-    let randY = random(height);
+    let randX = random(w);
+    let randY = random(h);
     let randR = random(1,3);
     let star = { x:randX,y:randY,r:randR };
     Stars.push(star);
@@ -48,12 +52,14 @@ function draw() {
   frameRate(30);
   background(15);
   /* draw stars */
+  Star_scroll+= 0.1;
   push();
   for (let i = 0; i < Stars.length; i++) {
     fill(255);
-    circle(Stars[i].x,Stars[i].y,Stars[i].r);
+    circle( (Stars[i].x + (Star_scroll*Stars[i].r)) % width,Stars[i].y,Stars[i].r);
   }
   pop();
+
   /* update, draw, and control planets */
   for (var i = 0; i < Spheres.length; i++) {
     var sphere = Spheres[i];
@@ -66,16 +72,20 @@ function draw() {
       sphere.control();
       sphere.behaviors();
 
-      if (sphere.name == socket_GetUser()) {
+      if (sphere.name == socket_GetUser() ) {
         let tempData = sphere.copyData();
         tempData.id = i;
         saveSphereData(tempData);
       }
       else {
-        retrieveSphereData(i);
+        retrieveSphereData( sphere.name, sphere.type );
       }
 
       sphere.show();     
     }
   }
+
+  /* check for sphere users */
+  if(Spheres.length > 0)
+    checkUserStillExists();
 }
