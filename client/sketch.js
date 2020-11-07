@@ -64,13 +64,14 @@ function draw() {
     var sphere = Spheres[i];
     if (sphere != null) {
       if (sphere.type.includes("_planet"))
-  	sphere.update(Spheres[0]);
+  	   sphere.update(Spheres[0]);
       else
-        sphere.update(Spheres[i-1]);
+       sphere.update(Spheres[i-1]);
   
       sphere.control();
       sphere.behaviors();
-  
+      sphere.show(); 
+        
       if (sphere.name == socket_GetUser() ) {
         let tempData = sphere.copyData();
         tempData.id = i;
@@ -78,9 +79,7 @@ function draw() {
       }
       else {
         retrieveSphereData( sphere.name, sphere.type );
-      }
-  
-      sphere.show();     
+      }    
     }
   }
 

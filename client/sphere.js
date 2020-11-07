@@ -27,15 +27,15 @@ function Sphere(name,type, x, y, r, color, parent) {
     radius:40,
     period:0,offset:0,
     initial_speed:1,
-    speed:1,speed_inc:1,maxspeed:15,
+    speed:1,speed_inc:1,maxspeed:20,
     dir:1
   };
   
   this.toss = {
     firing_stage:"orbiting",
     initial_force:1,force:1,
-    inc:1,
-    maxforce:50
+    inc:15,
+    maxforce:75
   };
 
   this.start();
@@ -94,7 +94,7 @@ Sphere.prototype.control = function() {
 
     if(pulling && this.toss.firing_stage == "loose") {
       this.toss.firing_stage = "returning";
-      this.vel.mult(0.25);
+      this.vel.mult(0.01);
       this.toss.force = this.toss.initial_force;
     } else if( this.toss.firing_stage == "returning" ) {
       this.toss.firing_stage == "loose"
