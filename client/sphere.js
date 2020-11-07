@@ -1,39 +1,9 @@
-/*
- * Sphere(name:string, type:string, x:int, y:int, color:[r:int, g:int, b:int], parent:Sphere or {})
- * %MEMBERS%
- * Sphere.name: string		-> user name
- * Sphere.type: string 		-> color_name + {"_planet" | "_moon"}
- * Sphere.x: int		-> x 
- * Sphere.y: int		-> y
- * Sphere.target: Vec		-> target
- * Sphere.color: [3]		-> color ([r, g, b])
- * Sphere.pos: Vec		-> unused
- * Sphere.vel: Vec		-> velocity
- * Sphere.acc: Vec		-> acceleration
- * Sphere.speed: int		-> current speed 
- * Sphere.maxspeed: int		-> max speed
- * Sphere.friction: float	-> friction
- * Sphere.r: int		-> radius
- * %FUNCTIONS%
- * Sphere.start ()		-> ? set in motion
- * Sphere.control ()		-> control via input
- * Sphere.copyData ()		-> ? return all data (what data type)
- * Sphere.readData (inData)	-> ? update all data (what data type)
- * Sphere.behaviors ()		-> 
- * Sphere.applyForce (f)	-> apply force f
- * Sphere.update		-> 
- * Sphere.show			-> 
- * Sphere.arrive		-> 
- * Sphere.shoot			-> 
- * Sphere.collide		-> 
- * Sphere.bounce		-> 
- */
 
 function Sphere(name,type, x, y, r, color, parent) {
+  /* name = username */
   this.name = name || "";
+  /* type = color_planet || color_moon (e.g. red_planet, orange_moon) */
   this.type = type || "default";
-  this.x = x || 0;
-  this.y = y || 0;
   this.target = createVector(x,y);
   this.color = color || [128,128,128];
   this.pos = createVector(x,y);
