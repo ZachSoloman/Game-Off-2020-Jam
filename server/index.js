@@ -33,9 +33,6 @@ function deleteUserBySocket(socket) {
   if (sockets.length > 0) 
     for (let i = sockets.length - 1; i >= 0 ; --i) {
       if (sockets[i] == socket) {
-
-      	userIndex = i;
-
         userData = { username:users[i], room:rooms[i]};	
         users.splice(i, 1);
         sockets.splice(i, 1);
@@ -47,78 +44,62 @@ function deleteUserBySocket(socket) {
   return userData;
 }
 
-function checkPlanets(name) {
-  for (let i = 0; i < planets.length; ++i) {
-    if (planets[i].name == name)
-      return true;
-  }
-  return false;
+function planetOfNameExists(name) {
+	for (let i = 0; i < planets.length; ++i)
+		if (planets[i].name == name)
+			return true;
+	return false;
 }
-function checkMoons(name) {
-  for (let i = 0; i < moons.length; ++i) {
-    if (moons[i].name == name)
-      return true;
-  }
-  return false;
+
+function moonOfNameExists(name) {
+	for (let i = 0; i < moons.length; ++i)
+		if (moons[i].name == name)
+			return true;
+	return false;
 }
+
 function getPlanetByName(name) {
-	let userPlanet = {};
-  	for (let i = 0; i < planets.length; ++i) {
-    	if (planets[i].name == name)
-      		userPlanet = planets[i];
-  	}
-  	return userPlanet;
+	for (let i = 0; i < planets.length; ++i)
+		if (planets[i].name == name)
+			return planets[i];
 }
+
 function getMoonByName(name) {
-	let userMoon = {};
-  	for (let i = 0; i < moons.length; ++i) {
-    	if (moons[i].name == name)
-      		userMoon = moons[i];
-  	}
-  	return userMoon;
+	for (let i = 0; i < moons.length; ++i)
+		if (moons[i].name == name)
+			return moons[i];
 }
-function checkMoons(name) {
-  for (let i = 0; i < moons.length; ++i) {
-    if (moons[i].name == name)
-      return true;
-  }
-  return false;
+
+
+function savePlanet(data) {
+	for (let i = 0; i < planets.length; ++i)
+		if (planets[i].name == data.name)
+			planets[i] = data;
 }
-function savePlanets(data) {
-  for (let i = 0; i < planets.length; ++i) {
-    if (planets[i].name == data.name) {
-      planets[i] = data;
-    }
-  }
+
+function saveMoon(data) {
+	for (let i = 0; i < moons.length; ++i)
+		if (moons[i].name == data.name)
+			moons[i] = data;
 }
-function saveMoons(data) {
-  for (let i = 0; i < moons.length; ++i) {
-    if (moons[i].name == data.name) {
-      moons[i] = data;
-    }
-  }
-}
+
 function removePlanet(name) {
-  for (let i = 0; i < planets.length; ++i) {
-    if (planets[i].name == name) {
-      planets.splice(i, 1);
-    }
-  }
+	for (let i = 0; i < planets.length; ++i)
+		if (planets[i].name == name)
+			planets.splice(i, 1);
 }
+
 function removeMoon(name) {
-  for (let i = 0; i < moons.length; ++i) {
-    if (moons[i].name == name) {
-      moons.splice(i ,1);
-    }
-  }
+	for (let i = 0; i < moons.length; ++i)
+		if (moons[i].name == name)
+			moons.splice(i ,1);
 }
 
 
 function userOfNameExists(name) {
-  for (let i = 0; i < users.length; ++i) {
-    if (users[i] == name)
-      return true;
-  }
+	for (let i = 0; i < users.length; ++i)
+		if (users[i] == name)
+			return true;
   return false;
 }
 
@@ -131,10 +112,10 @@ nsp.on('connection', function(socket) {
 
 	socket.on('setUsername', function(data) { 
 	  if (userOfNameExists(data)) {
-	     socket.emit('userExists', data + ' username is taken! Try some other username.');
+	  	socket.emit('userExists', data + ' username is taken! Try some other username.');
 	  } 
 	  else if(data == "") {
-	     socket.emit('userExists', 'Name must indclude at least one character.');
+	  	socket.emit('userExists', 'Name must indclude at least one character.');
 	  }
 	  else {
 	        users.push(data);
@@ -149,7 +130,7 @@ nsp.on('connection', function(socket) {
 		}
 
 		socket.join(roomPrefix+roomnum);
-	    socket.emit('userSet', {username: data, users:users, room:roomPrefix+roomnum});
+		socket.emit('userSet', {username: data, users:users, room:roomPrefix+roomnum});
 
 		nsp.to(roomPrefix+roomnum).emit('newmsg', { user: data, message: ' joined '+roomPrefix+roomnum});
 		nsp.to(roomPrefix+roomnum).emit('spawnAll', {username: data, users:users });
@@ -157,25 +138,21 @@ nsp.on('connection', function(socket) {
 	});
 
 	socket.on('msg', function(data) {
-	  nsp.in(data.room).emit('newmsg', data);
+		nsp.in(data.room).emit('newmsg', data);
 	});
 	socket.on('saveData', function(data) {
 		if(data != undefined) {
 			if(data.data.type.includes('planet')) {
-				if(!checkPlanets(data.data.name)) {
+				if(!planetOfNameExists(data.data.name))
 					planets.push(data.data);
-				}
-				else {			
-					savePlanets(data.data);
-				}
+				else
+					savePlanet(data.data);
 			}
 			else if(data.data.type.includes('moon')) {
-				if(!checkMoons(data.data.name)) {
+				if(!moonOfNameExists(data.data.name))
 					moons.push(data.data);
-				}
-				else {			
-					saveMoons(data.data);
-				}
+				else
+					saveMoon(data.data);
 			}
 		}
 	});
@@ -192,7 +169,7 @@ nsp.on('connection', function(socket) {
 		}
 	});
 	socket.on('testUserConnections', function(data) {
-		if( !users.includes(data.name) ) {
+		if(!users.includes(data.name)) {
 	    	/* send disconnect to clients */
     		nsp.to(data.room).emit('userDisconnect', data.name);
     		nsp.to(data.room).emit('newmsg', { user: data.name, message: ' disconnected from '+data.room});
@@ -223,11 +200,10 @@ nsp.on('connection', function(socket) {
 	});
 
 	socket.on('disconnect', function() {
-	  if (socket != "") {
-	    let socketUserData = deleteUserBySocket(socket);
-
-	    console.log('User '+socketUserData.username+' disconnected');
-	  }
+		if (socket != "") {
+			let socketUserData = deleteUserBySocket(socket);
+			console.log('User '+socketUserData.username+' disconnected');
+		}
 	});
 });
 
