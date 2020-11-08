@@ -40,7 +40,7 @@ function Sphere(name,type, x, y, r, color, parent) {
     inc:2,
     maxforce:50
   };
-
+  
   this.start();
 }
 
@@ -207,7 +207,7 @@ Sphere.prototype.behaviors = function() {
   if(this.type.includes( "moon" ) ) {
     if( this.toss.firing_stage == "orbiting") {
     } else if(this.toss.firing_stage == "charging") {
-
+  
     } else if(this.toss.firing_stage == "released") {
       this.shoot();
     } else if(this.toss.firing_stage == "loose") {
@@ -218,7 +218,6 @@ Sphere.prototype.behaviors = function() {
       this.applyForce(arrive);
     }
   }
-
 }
 
 Sphere.prototype.applyForce = function(f) {
@@ -241,7 +240,7 @@ Sphere.prototype.updateTarget = function(target) {
   if(this.type.includes("moon") ) {
     this.orbit.body = target || {};
     this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
-
+  
     this.target = createVector(
       this.parent.pos.x + ( (cos(this.orbit.period) * this.orbit.radius) ), 
       this.parent.pos.y + ( (sin(this.orbit.period) * this.orbit.radius) )
@@ -261,25 +260,25 @@ Sphere.prototype.update = function(e) {
       this.pos = createVector(this.target.x, this.target.y);
     }
   }
-
+  
   this.pos.add(this.vel);
   this.vel.add(this.acc);
-
+  
   //applies friction to sphere velocity 'this.vel'
   if(this.type.includes("planet") ) {
     let mag = this.vel.mag();
-
+  
     if( mag > 0.1) {
       let friction = 1 - this.friction;
       let velX = round( (this.vel.x * friction) * 1000) / 1000;
       let velY = round( (this.vel.y * friction) * 1000) / 1000;
-
+  
       this.vel = createVector(velX,velY);
     } else {
       this.vel.mult(0);
     }
   }
-
+  
   this.acc.mult(0);
 } 
 
@@ -288,7 +287,7 @@ Sphere.prototype.show = function() {
   /* draw 3x3 grid of copies of spheres to simulate recursion of screen */
   let copies = 9;
   let halfR = this.r/2;
-
+  
   let drawX = [
     map( this.pos.x-width, -width, 0, -width, 0),
     this.pos.x,
@@ -311,7 +310,7 @@ Sphere.prototype.show = function() {
     map(this.pos.y+height, height, height*2, height, height*2),
     map(this.pos.y+height, height, height*2, height, height*2)
   ];
-
+ 
   //sphere body planet and moon
   push();
   noStroke(); 
@@ -324,24 +323,24 @@ Sphere.prototype.show = function() {
     if(this.type.includes("planet")) {
       currentHealth = this.getHealth();
       healthBarWeight = map(currentHealth, 0, 100, 0.1, 7);
-
+  
       stroke(0,255,0, 128);
       strokeWeight(healthBarWeight);
       noFill();
       arc( drawX[c], drawY[c], this.r*1.5, this.r/2, PI, 0, OPEN);
     }
-
+ 
     noStroke();
     fill(this.color);
     circle( drawX[c], drawY[c], this.r);
-
+  
     //health / shield? display (front)
     if(this.type.includes("planet")) {
       stroke(0,255,0, 128);
       strokeWeight(healthBarWeight);
       noFill();
       arc( drawX[c], drawY[c], this.r*1.5, this.r/2, 0, PI, OPEN);
-
+  
       fill(255);
       stroke(255);
       strokeWeight(1);      
@@ -356,14 +355,14 @@ Sphere.prototype.arrive = function(target) {
   let desired = p5.Vector.sub(target, this.pos);
   let d = desired.mag();
   let speed = this.maxspeed;
-
+ 
   if( d < 1000) {
     speed = map(d, 0, 100, 0, this.maxspeed);
     if(d < this.orbit.radius ){
       this.toss.firing_stage = "orbiting"
     }
   }
-
+ 
   desired.setMag(speed);
   var steer = p5.Vector.sub(desired,this.vel);
   steer.limit(this.maxforce);
@@ -376,7 +375,7 @@ Sphere.prototype.shoot = function(target) {
   let outVel = createVector( perpendicular.y * this.orbit.dir, -perpendicular.x * this.orbit.dir).normalize();
   this.vel = createVector( outVel.x * this.toss.force, outVel.y * this.toss.force);
   this.vel.limit( this.toss.maxforce );
-
+ 
   this.toss.firing_stage = "loose";
   this.toss.force = this.toss.initial_force;
 }
@@ -430,3 +429,4 @@ Sphere.prototype.collide = function(spheres) {
   }
   return false;
 }
+

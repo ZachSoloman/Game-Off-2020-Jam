@@ -1,3 +1,4 @@
+
 let Spheres = [];
 let star_count = 100;
 let Stars = [];
@@ -53,14 +54,6 @@ function createSphere(name, colorName, color, start_position) {
   Spheres.push(new_moon);
 }
 
-function clearSpheres() {
-  Spheres = [];
-}
-
-function sendKill( user ) {
-  socket_Die(user);
-}
-
 function drawStars() {
   Star_scroll += 0.1;
   push();
@@ -71,37 +64,29 @@ function drawStars() {
   pop();
 }
 
-function updateSpheres() {
-  /* update, draw, and control planets */
+function drawSpheres() {
+  /* draw planets */
   for (var i = 0; i < Spheres.length; i++) {
     let sphere = Spheres[i];
     if (sphere != null) {
-      if (sphere.type.includes("_planet"))
-        sphere.update(Spheres[0]);
-      else
-       sphere.update(Spheres[i-1]);
-      if (windowFocused && sphere.name == socket_GetUser())
-        sphere.control();
-      sphere.behaviors();
-  
-      if(sphere.collide(Spheres)) die(sphere.name);
-  
       sphere.show(); 
-  
-      if (sphere.name == socket_GetUser() ) {
-        let tempData = sphere.copyData();
-        tempData.id = i;
-        socket_SaveSphereData(tempData);
-      }
-      else {
-        socket_RetrieveSphereData( sphere.name, sphere.type );
-      }    
     }
   }
-  
-  /* check for sphere users */
-  if(Spheres.length > 0)
-    socket_CheckUserStillExists();
+}
+
+function sendInput() {
+  if (keyIsDown(SHIFT))
+    socket_SendKey('t');
+  else if (keyIsDown(CONTROL))
+    socket_SendKey('r');
+  if (keyIsDown(65)) 
+    socket_SendKey('u');
+  if (keyIsDown(68)) 
+    socket_SendKey('d');
+  if (keyIsDown(87)) 
+    socket_SendKey('l');
+  if (keyIsDown(83)) 
+    socket_SendKey('r');
 }
 
 function draw() {
@@ -110,6 +95,7 @@ function draw() {
   frameRate(30);
   background(15);
   drawStars();
-  updateSpheres();
+  drawSpheres();
+  sendInput();
 }
 

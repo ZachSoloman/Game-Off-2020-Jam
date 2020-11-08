@@ -1,4 +1,17 @@
 
+// general idea behind server:
+//   client connects:
+//    -> send hi
+//   updates:
+//    -> updates objects according to game rules and user key input (stored in user object)
+//    -> to all users who are in a valid room
+//	-> send the state of the room (all spheres)
+//   receives from client:
+//    -> username -> sends userExists if user exists, otherwise sends userSet & adds the user to users
+//    -> chat messages -> send to other users in room
+//    -> input data -> change the boolean value of that key in user object
+//    -> rematch request -> restart the match
+
 const fs = require('fs');
 const express = require('express');
 const path = require('path');
