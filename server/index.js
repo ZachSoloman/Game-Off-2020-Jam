@@ -195,8 +195,28 @@ nsp.on('connection', function(socket) {
 		  	console.log('Moons');
 			console.log(moons);
 		    break;
+		  case 'sockets':
+		  	for(let s = 0; s < sockets.length; s++) {
+		  		console.log(sockets[s]);
+		  	}
+		    break;
 		  default:
 		}
+	});
+
+	socket.on('killUser', function( user ) {
+		for(let u = 0; u < users.length; u++){
+			if(users[u] == user) {
+				nsp.to(roomPrefix+roomnum).emit('die', user);
+				nsp.to(sockets[u].id).emit('rematch', { users:users });
+			}
+		}
+	});
+
+	socket.on('doRematch', function() {
+		nsp.to(roomPrefix+roomnum).emit('removeChatDiv', 'rematch');
+		nsp.to(roomPrefix+roomnum).emit('newmsg', { user: '', message: 'REMATCH!'});
+		nsp.to(roomPrefix+roomnum).emit('spawnAll', { users:users });
 	});
 
 	socket.on('disconnect', function() {

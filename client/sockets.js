@@ -77,7 +77,17 @@ function keyPressed() {
     socket.emit('debug', { key:'planets' } );
   else if (keyCode === 77) // if `m` key is pressed
     socket.emit('debug', { key:'moons' } );
+  else if (keyCode === 88) // if `x` key is pressed
+    socket.emit('debug', { key:'sockets' } );
 }
+
+function die(user) {
+  socket.emit('killUser', user );
+};
+
+function rematch(data) {
+  socket.emit('doRematch' );
+};
 
 /* handshake */
 socket.on('hi',function(data) {
@@ -101,6 +111,20 @@ socket.on('userSet', function(data) {
 	   <button type = "button" name = "sendbutton" onclick = "sendMessage()">Send</button> \
     </div>\
     <div id = "message-container">'+initial_msg+'</div>'
+  ;
+});
+
+socket.on('rematch', function() {
+  document.getElementById('message-container').innerHTML += '<div id = "rematch" > \
+     <button type = "button" name = "rematchButton" onclick = "rematch()">Rematch?</button> \
+    </div>'
+  ;
+});
+
+socket.on('removeChatDiv', function( id ) {
+  let removeMe = document.getElementById(id);
+  if(removeMe)
+    removeMe.parentNode.removeChild(removeMe);
   ;
 });
 
@@ -142,3 +166,15 @@ socket.on('userDisconnect', function(username) {
       }
 });
 
+socket.on('debug_to_web_console', function(data) {
+  console.log( data );
+});
+
+socket.on('die', function( deceased ) {
+  if (Spheres.length > 0)
+    for (let i = Spheres.length - 1; i >= 0 ; --i)
+      if (Spheres[i].name == deceased) {
+        Spheres.splice(i, 1);
+      }
+
+});

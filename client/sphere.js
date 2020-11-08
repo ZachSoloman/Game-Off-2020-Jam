@@ -16,6 +16,9 @@ function Sphere(name,type, x, y, r, color, parent) {
   this.friction = 0.1;
   /* radius */
   this.r = r || 50;
+  /* health */
+  this.health = 100;
+  this.maxhealth = 100;
   
   //moon variables
   this.parent = parent || {};
@@ -24,7 +27,7 @@ function Sphere(name,type, x, y, r, color, parent) {
     isOrbiting:false,
     body:{},
     x:60,y:60,
-    radius:40,
+    radius:50,
     period:0,offset:0,
     initial_speed:1,
     speed:1,speed_inc:1,maxspeed:20,
@@ -33,9 +36,9 @@ function Sphere(name,type, x, y, r, color, parent) {
   
   this.toss = {
     firing_stage:"orbiting",
-    initial_force:1,force:1,
-    inc:15,
-    maxforce:75
+    initial_force:10,force:10,
+    inc:2,
+    maxforce:50
   };
 
   this.start();
@@ -50,6 +53,17 @@ Sphere.prototype.start = function() {
     this.maxspeed = this.toss.maxforce;
     this.orbit.isOrbiting = true;
   }
+}
+
+Sphere.prototype.incHealth = function(h) {
+  this.health += h;
+  if(this.health <= 0 ) { this.health = 0; return true; }
+  if(this.health >= this.maxhealth ) { this.health = this.maxhealth;}
+  return false;
+}
+
+Sphere.prototype.getHealth = function() {
+  return this.health;
 }
 
 Sphere.prototype.control = function() {
@@ -106,6 +120,8 @@ Sphere.prototype.control = function() {
       if (keyIsDown(68)) this.vel.x += this.speed;
       if (keyIsDown(87)) this.vel.y -= this.speed;
       if (keyIsDown(83)) this.vel.y += this.speed;
+      if (keyIsDown(189)) this.incHealth(-1);// if `h` key is pressed
+      if (keyIsDown(187)) this.incHealth(1);// if `h` key is pressed     
     }
   }
 }
@@ -228,17 +244,13 @@ Sphere.prototype.updateTarget = function( target ) {
   }
   
   if(this.type.includes("moon") ) {
-    //if (this.toss.firing_stage == "orbiting"
-    //|| this.toss.firing_stage == "charging" 
-    //|| this.toss.firing_stage == "returning" ) {
-      this.orbit.body = target || {};
-      this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
-  
-      this.target = createVector(
-        this.parent.pos.x + ( (cos(this.orbit.period) * this.orbit.radius) ), 
-        this.parent.pos.y + ( (sin(this.orbit.period) * this.orbit.radius) )
-      );
-    //}
+    this.orbit.body = target || {};
+    this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
+
+    this.target = createVector(
+      this.parent.pos.x + ( (cos(this.orbit.period) * this.orbit.radius) ), 
+      this.parent.pos.y + ( (sin(this.orbit.period) * this.orbit.radius) )
+    );
   }
 }
 
@@ -278,7 +290,8 @@ Sphere.prototype.update = function(e) {
 
 Sphere.prototype.show = function() {
  
-  /* draw copies of player sphere on recursion of screen */
+  /* draw 3x3 grid of copies of spheres to simulate recursion of screen */
+  let copies = 9;
   let halfR = this.r/2;
 
   let drawX = [
@@ -304,24 +317,40 @@ Sphere.prototype.show = function() {
     map(this.pos.y+height, height, height*2, height, height*2)
   ];
 
-  let copies = 9;
-
-  // if(this.pos.x > width - halfR && this.pos.x < width){ copies++;}
-  // if(this.pos.x < halfR && this.pos.x > 0){ copies++;}
-  // if(this.pos.y > height - halfR && this.pos.y < height){ copies++;}
-  // if(this.pos.y < halfR && this.pos.y > 0){ copies++;}
-
+  //sphere body planet and moon
   push();
   noStroke(); 
   for(let c = 0; c < copies; c++) {
+    
+    let currentHealth = 1;
+    let healthBarWeight = 1;
+    
+    //health / shield? display (back)
+    if(this.type.includes("planet")) {
+      currentHealth = this.getHealth();
+      healthBarWeight = map(currentHealth, 0, 100, 0.1, 7);
 
+      stroke(0,255,0, 128);
+      strokeWeight(healthBarWeight);
+      noFill();
+      arc( drawX[c], drawY[c], this.r*1.5, this.r/2, PI, 0, OPEN);
+    }
+
+    noStroke();
     fill(this.color);
     circle( drawX[c], drawY[c], this.r);
-    
-    fill(255);
-    textAlign(CENTER);
 
+    //health / shield? display (front)
     if(this.type.includes("planet")) {
+      stroke(0,255,0, 128);
+      strokeWeight(healthBarWeight);
+      noFill();
+      arc( drawX[c], drawY[c], this.r*1.5, this.r/2, 0, PI, OPEN);
+
+      fill(255);
+      stroke(255);
+      strokeWeight(1);      
+      textAlign(CENTER);
       text( this.name, drawX[c], drawY[c]);
     }
   }
@@ -387,4 +416,22 @@ Sphere.prototype.bounce = function(target) {
 		this.vel = createVector(this.vel.x,-(this.vel.y));
 		this.pos.add(this.vel);
 	}
+}
+
+Sphere.prototype.collide = function(spheres) {
+  /* each planet checks if hit by another planets moon*/
+  for(let s = 0; s < spheres.length; s++) {
+    if(this.type.includes('_planet')) {
+      if(spheres[s].type.includes('_moon')){
+        if(spheres[s].name != this.name) {
+          let dist = p5.Vector.dist( spheres[s].pos, this.pos);
+          if(dist < (this.r + spheres[s].r)/2){//if I'm close enough to be hit
+            let isDead = this.incHealth(-10);
+            return isDead;
+          }
+        }
+      }
+    }
+  }
+  return false;
 }

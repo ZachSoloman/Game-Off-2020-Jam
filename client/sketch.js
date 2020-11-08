@@ -22,6 +22,10 @@ function clearSpheres() {
   Spheres = [];
 }
 
+function sendKill( user ) {
+  die(user);
+}
+
 function createSphere(name, colorName, color, start_position) {
   let new_planet = 
 	new Sphere(
@@ -70,8 +74,11 @@ function draw() {
   
       sphere.control();
       sphere.behaviors();
+
+      if(sphere.collide(Spheres)) die( sphere.name );
+
       sphere.show(); 
-        
+
       if (sphere.name == socket_GetUser() ) {
         let tempData = sphere.copyData();
         tempData.id = i;
