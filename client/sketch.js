@@ -29,14 +29,6 @@ function mouseClicked() {
     windowFocused = false;
 }
 
-function clearSpheres() {
-  Spheres = [];
-}
-
-function sendKill( user ) {
-  die(user);
-}
-
 function createSphere(name, colorName, color, start_position) {
   let new_planet = 
 	new Sphere(
@@ -61,22 +53,28 @@ function createSphere(name, colorName, color, start_position) {
   Spheres.push(new_moon);
 }
 
-function draw() {
-  /* initialize */
-  angleMode(RADIANS);
-  frameRate(30);
-  background(15);
-  /* draw stars */
-  Star_scroll+= 0.1;
+function clearSpheres() {
+  Spheres = [];
+}
+
+function sendKill( user ) {
+  socket_Die(user);
+}
+
+function drawStars() {
+  Star_scroll += 0.1;
   push();
   for (let i = 0; i < Stars.length; i++) {
     fill(255);
     circle( (Stars[i].x + (Star_scroll*Stars[i].r)) % width,Stars[i].y,Stars[i].r);
   }
   pop();
+}
+
+function updateSpheres() {
   /* update, draw, and control planets */
   for (var i = 0; i < Spheres.length; i++) {
-    var sphere = Spheres[i];
+    let sphere = Spheres[i];
     if (sphere != null) {
       if (sphere.type.includes("_planet"))
         sphere.update(Spheres[0]);
@@ -93,15 +91,25 @@ function draw() {
       if (sphere.name == socket_GetUser() ) {
         let tempData = sphere.copyData();
         tempData.id = i;
-        saveSphereData(tempData);
+        socket_SaveSphereData(tempData);
       }
       else {
-        retrieveSphereData( sphere.name, sphere.type );
+        socket_RetrieveSphereData( sphere.name, sphere.type );
       }    
     }
   }
   
   /* check for sphere users */
   if(Spheres.length > 0)
-    checkUserStillExists();
+    socket_CheckUserStillExists();
 }
+
+function draw() {
+  /* initialize */
+  angleMode(RADIANS);
+  frameRate(30);
+  background(15);
+  drawStars();
+  updateSpheres();
+}
+

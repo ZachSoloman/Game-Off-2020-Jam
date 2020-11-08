@@ -19,16 +19,24 @@ var user_start_positions =
     {x:100,y:100},
   ];
 
-/* External */
-
 function socket_GetUser() {
   return user;
 }
 
-/* Internal */
-
+// general idea behind client api:
+//   sends:
+//    -> hi
+//    -> username
+//    -> input data
+//    -> chat messages
+//    -> rematch request
+//   receives:
+//    -> state of room (all users positions and velocities (for client interpolation))
+//    -> chat messages
+//    -> rematch request
 /* load existing users supplied from the server */
-function loadUsers(users) {
+
+function socket_LoadUsers(users) {
   clearSpheres();
   for (let u = 0; u < users.length; u++) {
     createSphere(users[u], user_colors[u % user_colors.length].name, 
@@ -38,12 +46,12 @@ function loadUsers(users) {
 }
 
 /* set username to input value */
-function setUsername() {
+function socket_SetUsername() {
   socket.emit('setUsername', document.getElementById('name').value);
 };
 
 /* send a message in the chat interface */
-function sendMessage() {
+function socket_SendMessage() {
   var msg = document.getElementById('message').value;
   if (msg) {
     socket.emit('msg', {message: msg, user: user, room: room});
@@ -51,17 +59,17 @@ function sendMessage() {
 }
 
 /* save your sphere position to the server */
-function saveSphereData(data) {
+function socket_SaveSphereData(data) {
   socket.emit('saveData', { data:data, room:room });
 }
 
 /* retrieve a sphere position from the server by id */
-function retrieveSphereData( name, type ) {
+function socket_RetrieveSphereData( name, type ) {
   socket.emit('retrieveData', { name:name, type:type } );
 }
 
 /* looks to see if user of spheres still exists*/
-function checkUserStillExists() {
+function socket_CheckUserStillExists() {
   for(let sp = 0; sp < Spheres.length; sp+=2) {
     socket.emit('testUserConnections', { name:Spheres[sp].name, room:room } );
   }
@@ -83,11 +91,11 @@ function keyPressed() {
   }
 }
 
-function die(user) {
+function socket_Die(user) {
   socket.emit('killUser', user );
 };
 
-function rematch(data) {
+function socket_Rematch(data) {
   socket.emit('doRematch' );
 };
 
@@ -106,11 +114,11 @@ socket.on('userSet', function(data) {
   user = data.username;
   room = data.room;
 
-  let initial_msg = "Welcome to "+data.room;
+  let initial_msg = "Welcome to " + data.room;
   document.getElementById('login').innerHTML = 
    '<div> \
 	   <input type = "text" id = "message"> \
-	   <button type = "button" name = "sendbutton" onclick = "sendMessage()">Send</button> \
+	   <button type = "button" name = "sendbutton" onclick = "socket_SendMessage()">Send</button> \
     </div>\
     <div id = "message-container">'+initial_msg+'</div>'
   ;
@@ -118,12 +126,12 @@ socket.on('userSet', function(data) {
 
 socket.on('rematch', function() {
   document.getElementById('message-container').innerHTML += '<div id = "rematch" > \
-     <button type = "button" name = "rematchButton" onclick = "rematch()">Rematch?</button> \
+     <button type = "button" name = "rematchButton" onclick = "socket_Rematch()">Rematch?</button> \
     </div>'
   ;
 });
 
-socket.on('removeChatDiv', function( id ) {
+socket.on('removeChatDiv', function(id) {
   let removeMe = document.getElementById(id);
   if(removeMe)
     removeMe.parentNode.removeChild(removeMe);
@@ -147,7 +155,7 @@ socket.on('newmsg', function(data) {
 
 socket.on('spawnAll', function(data) {
   Spheres = [];
-  loadUsers(data.users);
+  socket_LoadUsers(data.users);
 }); 
 
 socket.on('loadData', function(data) {
@@ -172,11 +180,10 @@ socket.on('debug_to_web_console', function(data) {
   console.log( data );
 });
 
-socket.on('die', function( deceased ) {
+socket.on('die', function(deceased) {
   if (Spheres.length > 0)
     for (let i = Spheres.length - 1; i >= 0 ; --i)
       if (Spheres[i].name == deceased) {
         Spheres.splice(i, 1);
       }
-
 });

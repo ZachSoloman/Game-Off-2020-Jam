@@ -105,11 +105,11 @@ function userOfNameExists(name) {
 
 nsp.on('connection', function(socket) {
 	console.log('A user connected');
-
+  
 	socket.join("Lobby");
 	socket.emit('setRoom', { room: 'Lobby'} );
 	io.of('/moonshot').in('Lobby').emit('hi', {users:users,message:'Welcome to the lobby!'});
-
+  
 	socket.on('setUsername', function(data) { 
 	  if (userOfNameExists(data)) {
 	  	socket.emit('userExists', data + ' username is taken! Try some other username.');
@@ -120,23 +120,23 @@ nsp.on('connection', function(socket) {
 	  else {
 	        users.push(data);
 	        sockets.push(socket);
-
+  
 		if(io.nsps['/moonshot'].adapter.rooms[roomPrefix+roomnum] 
 		&& io.nsps['/moonshot'].adapter.rooms[roomPrefix+roomnum].length > 1) 
 			roomnum++;
-
+  
 		if(!rooms.includes(roomPrefix+roomnum)) {
 			rooms.push(roomPrefix+roomnum);
 		}
-
+  
 		socket.join(roomPrefix+roomnum);
 		socket.emit('userSet', {username: data, users:users, room:roomPrefix+roomnum});
-
+  
 		nsp.to(roomPrefix+roomnum).emit('newmsg', { user: data, message: ' joined '+roomPrefix+roomnum});
 		nsp.to(roomPrefix+roomnum).emit('spawnAll', {username: data, users:users });
 	  }
 	});
-
+  
 	socket.on('msg', function(data) {
 		nsp.in(data.room).emit('newmsg', data);
 	});
@@ -203,7 +203,7 @@ nsp.on('connection', function(socket) {
 		  default:
 		}
 	});
-
+  
 	socket.on('killUser', function( user ) {
 		for(let u = 0; u < users.length; u++){
 			if(users[u] == user) {
@@ -212,13 +212,13 @@ nsp.on('connection', function(socket) {
 			}
 		}
 	});
-
+  
 	socket.on('doRematch', function() {
 		nsp.to(roomPrefix+roomnum).emit('removeChatDiv', 'rematch');
 		nsp.to(roomPrefix+roomnum).emit('newmsg', { user: '', message: 'REMATCH!'});
 		nsp.to(roomPrefix+roomnum).emit('spawnAll', { users:users });
 	});
-
+  
 	socket.on('disconnect', function() {
 		if (socket != "") {
 			let socketUserData = deleteUserBySocket(socket);
