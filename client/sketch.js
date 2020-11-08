@@ -18,7 +18,7 @@ function setup() {
   for (let i = 0; i < star_count; i++) {
     let randX = random(w);
     let randY = random(h);
-    let randR = random(1,5);
+    let randR = random(1,4);
     let star = { x:randX,y:randY,r:randR };
     Stars.push(star);
   }
@@ -52,7 +52,7 @@ function createSphere(name, colorName, color, start_position) {
 		new_planet.x,
 		new_planet.y,
 		8,
-		color,
+		[ max( 80, color[0] *0.8), max( 80, color[1]*0.8), max( 80, color[2]*0.8), color[3]],
 		new_planet
 	);
   Spheres.push(new_moon);
@@ -72,6 +72,7 @@ function draw() {
   push();
   translate( -width, -height, 0);
   for (let i = 0; i < Stars.length; i++) {
+    noStroke();
     fill(255);
     circle( 
       (Stars[i].x + (Star_scroll*Stars[i].r)) % width,

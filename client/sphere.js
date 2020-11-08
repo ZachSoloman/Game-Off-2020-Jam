@@ -32,16 +32,16 @@ function Sphere(name,type, x, y, r, color, parent) {
     x:60,y:60,
     radius:60,
     period:0,offset:0,
-    initial_speed:1,
-    speed:1,speed_inc:1,maxspeed:20,
+    initial_speed:5,
+    speed:5,speed_inc:1,maxspeed:25,
     dir:1
   };
   
   this.toss = {
     firing_stage:"orbiting",
     initial_force:20,force:20,
-    inc:3,
-    maxforce:60
+    inc:1,
+    maxforce:40
   };
 
   this.start();
@@ -369,7 +369,7 @@ Sphere.prototype.show = function() {
   directionalLight( 
     this.color,
     width/4, height/4, -400 );
-      blendMode(ADD);
+  blendMode(ADD);
 
   /* do planet rotation*/
   this.rotation = this.rotation + (1*(deltaTime / 700));
@@ -383,26 +383,34 @@ Sphere.prototype.show = function() {
     let currentHealth = 1;
     let healthBarWeight = 1;
     
-    //health / shield? display (back)
+    
     if(this.type.includes("planet")) {
+
+      //health / shield? display (back)
       currentHealth = this.getHealth();
-      healthBarWeight = map(currentHealth, 0, 100, 0.01, 0.125);
+      healthBarWeight = map(currentHealth, 0, 100, 0.01, 0.15);
 
       push();
-      rotateX( -TWO_PI / 3.5 );
-      emissiveMaterial( 100, 255, 100, 255);
-      torus( this.r * 1.25, this.r * healthBarWeight );
+      rotateX( -TWO_PI / 3.1 );
+      blendMode( LIGHTEST );
+      emissiveMaterial( 80, 255, 180, 128 );
+      torus( this.r * 1.4, this.r * healthBarWeight, 24, 2);
       pop();
 
+      blendMode(ADD);
+
+      // draw planet 
       push();
       rotateY( this.rotation );
       noStroke();
+      //stroke(255);
       texture(planetImg);
       sphere( this.r);
       pop();
 
     } else {
 
+      // draw moon
       push();
       translate( 0, 0, 0);
       noStroke();
