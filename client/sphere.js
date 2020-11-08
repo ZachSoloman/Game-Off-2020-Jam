@@ -20,6 +20,9 @@ function Sphere(name,type, x, y, r, color, parent) {
   this.health = 100;
   this.maxhealth = 100;
   
+  /* planet rotation */
+  this.rotation = 0;
+
   //moon variables
   this.parent = parent || {};
   
@@ -27,7 +30,7 @@ function Sphere(name,type, x, y, r, color, parent) {
     isOrbiting:false,
     body:{},
     x:60,y:60,
-    radius:50,
+    radius:60,
     period:0,offset:0,
     initial_speed:1,
     speed:1,speed_inc:1,maxspeed:20,
@@ -36,9 +39,9 @@ function Sphere(name,type, x, y, r, color, parent) {
   
   this.toss = {
     firing_stage:"orbiting",
-    initial_force:10,force:10,
-    inc:2,
-    maxforce:50
+    initial_force:20,force:20,
+    inc:3,
+    maxforce:60
   };
 
   this.start();
@@ -244,12 +247,13 @@ Sphere.prototype.updateTarget = function( target ) {
   }
   
   if(this.type.includes("moon") ) {
-    this.orbit.body = target || {};
+    this.orbit.body = this.parent = target || {};
     this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
 
     this.target = createVector(
-      this.parent.pos.x + ( (cos(this.orbit.period) * this.orbit.radius) ), 
-      this.parent.pos.y + ( (sin(this.orbit.period) * this.orbit.radius) )
+      this.parent.pos.x + ( cos(this.orbit.period) * this.orbit.radius ), 
+      this.parent.pos.y + ( sin(this.orbit.period) * this.orbit.radius * 0.5 ), 
+      this.parent.pos.z + ( sin(this.orbit.period) * this.orbit.radius * 0.5 )    
     );
   }
 }
@@ -318,41 +322,105 @@ Sphere.prototype.show = function() {
   ];
 
   //sphere body planet and moon
+  /* 2d drawing */
+  // push();
+  // noStroke(); 
+  // for(let c = 0; c < copies; c++) {
+    
+  //   let currentHealth = 1;
+  //   let healthBarWeight = 1;
+    
+  //   //health / shield? display (back)
+  //   if(this.type.includes("planet")) {
+  //     currentHealth = this.getHealth();
+  //     healthBarWeight = map(currentHealth, 0, 100, 0.1, 7);
+
+  //     stroke(0,255,0, 128);
+  //     strokeWeight(healthBarWeight);
+  //     noFill();
+  //     arc( drawX[c], drawY[c], this.r*1.5, this.r/2, PI, 0, OPEN);
+  //   }
+
+  //   noStroke();
+  //   fill(this.color);
+  //   circle( drawX[c], drawY[c], this.r);
+
+  //   //health / shield? display (front)
+  //   if(this.type.includes("planet")) {
+  //     stroke(0,255,0, 128);
+  //     strokeWeight(healthBarWeight);
+  //     noFill();
+  //     arc( drawX[c], drawY[c], this.r*1.5, this.r/2, 0, PI, OPEN);
+
+  //     fill(255);
+  //     stroke(255);
+  //     strokeWeight(1);      
+  //     textAlign(CENTER);
+  //     text( this.name, drawX[c], drawY[c]);
+  //   }
+  // }
+  // pop();
+
+  /* 3d drwawing*/
+
   push();
+
+  /* 3d lighting */
+  directionalLight( 
+    this.color,
+    width/4, height/4, -400 );
+      blendMode(ADD);
+
+  /* do planet rotation*/
+  this.rotation = this.rotation + (1*(deltaTime / 700));
+
   noStroke(); 
   for(let c = 0; c < copies; c++) {
-    
+    push();
+    //movement for 3d
+    translate(drawX[c], drawY[c]);
+
     let currentHealth = 1;
     let healthBarWeight = 1;
     
     //health / shield? display (back)
     if(this.type.includes("planet")) {
       currentHealth = this.getHealth();
-      healthBarWeight = map(currentHealth, 0, 100, 0.1, 7);
+      healthBarWeight = map(currentHealth, 0, 100, 0.01, 0.125);
 
-      stroke(0,255,0, 128);
-      strokeWeight(healthBarWeight);
-      noFill();
-      arc( drawX[c], drawY[c], this.r*1.5, this.r/2, PI, 0, OPEN);
+      push();
+      rotateX( -TWO_PI / 3.5 );
+      emissiveMaterial( 100, 255, 100, 255);
+      torus( this.r * 1.25, this.r * healthBarWeight );
+      pop();
+
+      push();
+      rotateY( this.rotation );
+      noStroke();
+      texture(planetImg);
+      sphere( this.r);
+      pop();
+
+    } else {
+
+      push();
+      translate( 0, 0, 0);
+      noStroke();
+      texture(planetImg);
+      sphere( this.r);
+      pop();
     }
-
-    noStroke();
-    fill(this.color);
-    circle( drawX[c], drawY[c], this.r);
 
     //health / shield? display (front)
     if(this.type.includes("planet")) {
-      stroke(0,255,0, 128);
-      strokeWeight(healthBarWeight);
-      noFill();
-      arc( drawX[c], drawY[c], this.r*1.5, this.r/2, 0, PI, OPEN);
 
       fill(255);
       stroke(255);
       strokeWeight(1);      
       textAlign(CENTER);
-      text( this.name, drawX[c], drawY[c]);
+      //text( this.name, drawX[c], drawY[c]);
     }
+    pop();
   }
   pop();
 }

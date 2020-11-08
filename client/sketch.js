@@ -7,15 +7,23 @@ let Star_scroll = 0;
 let w = 900;
 let h = 600;
 
+let planetImg;
+
 function setup() {
-  createCanvas( w, h);
+  createCanvas( w, h, WEBGL);
+
+  ortho( -width/2, width/2, -height/2, height/2, 0, 5000);
+  //perspective( PI/3.0, width / height, 0.1, 5000);
+
   for (let i = 0; i < star_count; i++) {
     let randX = random(w);
     let randY = random(h);
-    let randR = random(1,3);
+    let randR = random(1,5);
     let star = { x:randX,y:randY,r:randR };
     Stars.push(star);
   }
+
+  planetImg = loadImage('planet_skin.png');
 }
 
 function clearSpheres() {
@@ -33,7 +41,7 @@ function createSphere(name, colorName, color, start_position) {
 		""+colorName+"_planet",
 		start_position.x,
 		start_position.y,
-		50,
+		25,
 		color
 	);
   Spheres.push(new_planet);
@@ -43,7 +51,7 @@ function createSphere(name, colorName, color, start_position) {
 		""+colorName+"_moon",
 		new_planet.x,
 		new_planet.y,
-		15,
+		8,
 		color,
 		new_planet
 	);
@@ -55,17 +63,30 @@ function draw() {
   angleMode(RADIANS);
   frameRate(30);
   background(15);
+
+  /* center 3d camera */
+  translate( width/2,height/2);
+
   /* draw stars */
   Star_scroll+= 0.1;
   push();
+  translate( -width, -height, 0);
   for (let i = 0; i < Stars.length; i++) {
     fill(255);
-    circle( (Stars[i].x + (Star_scroll*Stars[i].r)) % width,Stars[i].y,Stars[i].r);
+    circle( 
+      (Stars[i].x + (Star_scroll*Stars[i].r)) % width,
+      Stars[i].y,
+      Stars[i].r
+      );
   }
   pop();
+
+  /*  raise the overall 3d light level 0-255 */
+  ambientLight(30);
+
   /* update, draw, and control planets */
   for (var i = 0; i < Spheres.length; i++) {
-    var sphere = Spheres[i];
+    let sphere = Spheres[i];
     if (sphere != null) {
       if (sphere.type.includes("_planet"))
   	   sphere.update(Spheres[0]);

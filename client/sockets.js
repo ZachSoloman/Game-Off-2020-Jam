@@ -13,7 +13,7 @@ var user_colors =
 var user_start_positions = 
   [
     {x:100,y:100},
-    {x:500,y:500},
+    {x:800,y:500},
     {x:100,y:100},
     {x:100,y:100},
     {x:100,y:100},
