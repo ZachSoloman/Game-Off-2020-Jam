@@ -7,8 +7,11 @@ let Star_scroll = 0;
 let w = 900;
 let h = 600;
 
+let windowFocused = false;
+let debugMode = false;
+
 function setup() {
-  createCanvas( w, h);
+  createCanvas(w, h);
   for (let i = 0; i < star_count; i++) {
     let randX = random(w);
     let randY = random(h);
@@ -16,6 +19,14 @@ function setup() {
     let star = { x:randX,y:randY,r:randR };
     Stars.push(star);
   }
+}
+
+function mouseClicked() {
+  if (mouseX >= 0 && mouseX < w
+  &&  mouseY >= 0 && mouseY < h)
+    windowFocused = true;
+  else
+    windowFocused = false;
 }
 
 function clearSpheres() {
@@ -68,17 +79,17 @@ function draw() {
     var sphere = Spheres[i];
     if (sphere != null) {
       if (sphere.type.includes("_planet"))
-  	   sphere.update(Spheres[0]);
+        sphere.update(Spheres[0]);
       else
        sphere.update(Spheres[i-1]);
-  
-      sphere.control();
+      if (windowFocused)
+        sphere.control();
       sphere.behaviors();
-
-      if(sphere.collide(Spheres)) die( sphere.name );
-
+  
+      if(sphere.collide(Spheres)) die(sphere.name);
+  
       sphere.show(); 
-
+  
       if (sphere.name == socket_GetUser() ) {
         let tempData = sphere.copyData();
         tempData.id = i;
@@ -89,7 +100,7 @@ function draw() {
       }    
     }
   }
-
+  
   /* check for sphere users */
   if(Spheres.length > 0)
     checkUserStillExists();

@@ -167,7 +167,7 @@ Sphere.prototype.copyData = function() {
   return allData;
 }
 
-Sphere.prototype.readData = function( inData ) {
+Sphere.prototype.readData = function(inData) {
   
   this.name = inData.name;
   this.type = inData.type;
@@ -230,7 +230,7 @@ Sphere.prototype.applyForce = function(f) {
   this.acc.add(f);
 }
 
-Sphere.prototype.updateTarget = function( target ) {
+Sphere.prototype.updateTarget = function(target) {
   if(this.type.includes("planet")) {
     this.parent = target || {};
     this.orbit.period += TWO_PI / this.orbit.radius;
@@ -387,17 +387,17 @@ Sphere.prototype.shoot = function(target) {
 }
 
 Sphere.prototype.recurse = function(target) {
-  let edgetuck = 0;//this.r/2;
-  if(  this.pos.x < -edgetuck ) {
+  let edgetuck = 0;
+  if(this.pos.x < -edgetuck ) {
     this.pos.x = width + edgetuck;
   }
-  if( this.pos.x > width + edgetuck) {
+  if(this.pos.x > width + edgetuck) {
     this.pos.x = -edgetuck;
   } 
-  if(  this.pos.y < -edgetuck) {
+  if(this.pos.y < -edgetuck) {
     this.pos.y = height + edgetuck;
   }
-  if( this.pos.y > height + edgetuck) {
+  if(this.pos.y > height + edgetuck) {
     this.pos.y = -edgetuck;
   }
 }
@@ -419,13 +419,13 @@ Sphere.prototype.bounce = function(target) {
 }
 
 Sphere.prototype.collide = function(spheres) {
-  /* each planet checks if hit by another planets moon*/
+  /* each planet checks if hit by another planets moon */
   for(let s = 0; s < spheres.length; s++) {
     if(this.type.includes('_planet')) {
       if(spheres[s].type.includes('_moon')){
         if(spheres[s].name != this.name) {
           let dist = p5.Vector.dist( spheres[s].pos, this.pos);
-          if(dist < (this.r + spheres[s].r)/2){//if I'm close enough to be hit
+          if(dist < (this.r + spheres[s].r)/2){ //if I\'m close enough to be hit
             let isDead = this.incHealth(-10);
             return isDead;
           }

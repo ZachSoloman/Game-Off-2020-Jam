@@ -69,16 +69,18 @@ function checkUserStillExists() {
 
 /* debug to console */
 function keyPressed() {
-  if (keyCode === 82) // if `r` key is pressed
-    socket.emit('debug', { key:'rooms' } );
-  else if (keyCode === 85) // if `u` key is pressed
-    socket.emit('debug', { key:'users' } );
-  else if (keyCode === 80) // if `p` key is pressed
-    socket.emit('debug', { key:'planets' } );
-  else if (keyCode === 77) // if `m` key is pressed
-    socket.emit('debug', { key:'moons' } );
-  else if (keyCode === 88) // if `x` key is pressed
-    socket.emit('debug', { key:'sockets' } );
+  if (debugMode) {
+    if (keyCode === 82) // if `r` key is pressed
+      socket.emit('debug', { key:'rooms' } );
+    else if (keyCode === 85) // if `u` key is pressed
+      socket.emit('debug', { key:'users' } );
+    else if (keyCode === 80) // if `p` key is pressed
+      socket.emit('debug', { key:'planets' } );
+    else if (keyCode === 77) // if `m` key is pressed
+      socket.emit('debug', { key:'moons' } );
+    else if (keyCode === 88) // if `x` key is pressed
+      socket.emit('debug', { key:'sockets' } );
+  }
 }
 
 function die(user) {
