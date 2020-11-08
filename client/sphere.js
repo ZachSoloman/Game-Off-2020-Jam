@@ -321,55 +321,11 @@ Sphere.prototype.show = function() {
     map(this.pos.y+height, height, height*2, height, height*2)
   ];
 
-  //sphere body planet and moon
-  /* 2d drawing */
-  // push();
-  // noStroke(); 
-  // for(let c = 0; c < copies; c++) {
-    
-  //   let currentHealth = 1;
-  //   let healthBarWeight = 1;
-    
-  //   //health / shield? display (back)
-  //   if(this.type.includes("planet")) {
-  //     currentHealth = this.getHealth();
-  //     healthBarWeight = map(currentHealth, 0, 100, 0.1, 7);
-
-  //     stroke(0,255,0, 128);
-  //     strokeWeight(healthBarWeight);
-  //     noFill();
-  //     arc( drawX[c], drawY[c], this.r*1.5, this.r/2, PI, 0, OPEN);
-  //   }
-
-  //   noStroke();
-  //   fill(this.color);
-  //   circle( drawX[c], drawY[c], this.r);
-
-  //   //health / shield? display (front)
-  //   if(this.type.includes("planet")) {
-  //     stroke(0,255,0, 128);
-  //     strokeWeight(healthBarWeight);
-  //     noFill();
-  //     arc( drawX[c], drawY[c], this.r*1.5, this.r/2, 0, PI, OPEN);
-
-  //     fill(255);
-  //     stroke(255);
-  //     strokeWeight(1);      
-  //     textAlign(CENTER);
-  //     text( this.name, drawX[c], drawY[c]);
-  //   }
-  // }
-  // pop();
-
   /* 3d drwawing*/
-
   push();
 
-  /* 3d lighting */
-  directionalLight( 
-    this.color,
-    width/4, height/4, -400 );
-  blendMode(ADD);
+  /* 3d lighting, uses planet color to color texture */
+  pointLight( this.color, 0, 0, -10 );
 
   /* do planet rotation*/
   this.rotation = this.rotation + (1*(deltaTime / 700));
@@ -377,33 +333,23 @@ Sphere.prototype.show = function() {
   noStroke(); 
   for(let c = 0; c < copies; c++) {
     push();
-    //movement for 3d
+    /* translates movement for 3d*/
     translate(drawX[c], drawY[c]);
 
-    let currentHealth = 1;
-    let healthBarWeight = 1;
-    
-    
     if(this.type.includes("planet")) {
 
-      //health / shield? display (back)
-      currentHealth = this.getHealth();
-      healthBarWeight = map(currentHealth, 0, 100, 0.01, 0.15);
+      let healthBarWeight = map(this.getHealth(), 0, 100, 0.01, 0.3);
 
       push();
-      rotateX( -TWO_PI / 3.1 );
-      blendMode( LIGHTEST );
+      rotateX( -TWO_PI / 3.5 );
       emissiveMaterial( 80, 255, 180, 128 );
-      torus( this.r * 1.4, this.r * healthBarWeight, 24, 2);
+      torus( this.r * 1.6, this.r * healthBarWeight, 24, 2);
       pop();
-
-      blendMode(ADD);
 
       // draw planet 
       push();
       rotateY( this.rotation );
       noStroke();
-      //stroke(255);
       texture(planetImg);
       sphere( this.r);
       pop();
@@ -418,15 +364,22 @@ Sphere.prototype.show = function() {
       sphere( this.r);
       pop();
     }
+    pop();
+  }
 
-    //health / shield? display (front)
-    if(this.type.includes("planet")) {
-
-      fill(255);
-      stroke(255);
-      strokeWeight(1);      
-      textAlign(CENTER);
-      //text( this.name, drawX[c], drawY[c]);
+  /* player name */
+  if(this.type.includes("planet")) {
+    push();
+    fill(255);
+    textSize(20);
+    translate( 0, 0, 0);
+    if(this.type.includes("red")) {
+      textAlign( LEFT);
+      text( this.name, -width + 50, -50);
+    }
+    else if(this.type.includes("blue")) {
+      textAlign(RIGHT);
+      text( this.name, -50, -height + 50);      
     }
     pop();
   }
@@ -452,10 +405,19 @@ Sphere.prototype.arrive = function(target) {
 }
 
 Sphere.prototype.shoot = function(target) {
-  let invert = createVector( this.orbit.body.pos.y -this.orbit.body.pos.x);
+
+  //uses current rotation
   let perpendicular = p5.Vector.sub( this.target, this.orbit.body.pos);
   let outVel = createVector( perpendicular.y * this.orbit.dir, -perpendicular.x * this.orbit.dir).normalize();
-  this.vel = createVector( outVel.x * this.toss.force, outVel.y * this.toss.force);
+  
+  // uses planet direction to aim
+  let planetVel = this.parent.vel.normalize();
+
+  this.vel = createVector( 
+    (planetVel.x * this.toss.force) + outVel.x,
+    (planetVel.y * this.toss.force) + outVel.y
+    );
+
   this.vel.limit( this.toss.maxforce );
 
   this.toss.firing_stage = "loose";
@@ -501,7 +463,7 @@ Sphere.prototype.collide = function(spheres) {
       if(spheres[s].type.includes('_moon')){
         if(spheres[s].name != this.name) {
           let dist = p5.Vector.dist( spheres[s].pos, this.pos);
-          if(dist < (this.r + spheres[s].r)/2){//if I'm close enough to be hit
+          if(dist < (this.r + spheres[s].r)){//if I'm close enough to be hit
             let isDead = this.incHealth(-10);
             return isDead;
           }

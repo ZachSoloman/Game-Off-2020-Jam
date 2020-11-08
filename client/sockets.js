@@ -12,8 +12,8 @@ var user_colors =
 	];
 var user_start_positions = 
   [
-    {x:100,y:100},
-    {x:800,y:500},
+    {x:100,y:500},
+    {x:800,y:100},
     {x:100,y:100},
     {x:100,y:100},
     {x:100,y:100},
@@ -99,7 +99,9 @@ socket.on('hi',function(data) {
 socket.on('userExists', function(data) {
   document.getElementById('error-container').innerHTML = data;
 });
-
+socket.on('setRoom', function(data) {
+  room = data.room;
+});
 socket.on('userSet', function(data) {
   user = data.username;
   room = data.room;
@@ -115,10 +117,11 @@ socket.on('userSet', function(data) {
 });
 
 socket.on('rematch', function() {
+  if(!document.getElementById('rematch')) {
   document.getElementById('message-container').innerHTML += '<div id = "rematch" > \
      <button type = "button" name = "rematchButton" onclick = "rematch()">Rematch?</button> \
-    </div>'
-  ;
+    </div>';
+  }
 });
 
 socket.on('removeChatDiv', function( id ) {

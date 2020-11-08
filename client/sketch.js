@@ -1,13 +1,20 @@
 let Spheres = [];
-let star_count = 100;
+let star_count = 65;
 let Stars = [];
 let Star = { x:[],y:[],r:[] };
 let Star_scroll = 0;
+
+let Sun = { x: 0, y:0, color:[240,240,160], };
 
 let w = 900;
 let h = 600;
 
 let planetImg;
+let font;
+
+function preload() {
+  font = loadFont('EdgeOfTheGalaxy-Reg.otf');
+}
 
 function setup() {
   createCanvas( w, h, WEBGL);
@@ -24,6 +31,9 @@ function setup() {
   }
 
   planetImg = loadImage('planet_skin.png');
+  textFont(font);
+  textSize(20);
+  textAlign(CENTER, CENTER);
 }
 
 function clearSpheres() {
@@ -65,12 +75,12 @@ function draw() {
   background(15);
 
   /* center 3d camera */
-  translate( width/2,height/2);
+  translate( width/2, height/2);
 
   /* draw stars */
   Star_scroll+= 0.1;
   push();
-  translate( -width, -height, 0);
+  translate( -width, -height, -200);
   for (let i = 0; i < Stars.length; i++) {
     noStroke();
     fill(255);
@@ -82,8 +92,31 @@ function draw() {
   }
   pop();
 
+
+  /* title text*/
+  if( room == 'Lobby') {
+  push();
+    translate( 0, 0, -500);
+  textSize(100);
+  text('Game Title', -width/2, -height/1.3);
+  pop();
+  }
+
   /*  raise the overall 3d light level 0-255 */
   ambientLight(30);
+
+  /* draws a sun using p5 shapes */
+  push();
+  noStroke();
+  translate( -width/2, -height/2, -100);
+  emissiveMaterial( Sun.color );
+  sphere( 50 );
+
+  for(let f =0; f < 8; f++) {
+    fill(255,255,200, 2);
+    circle( 0, 0, f*30);
+  }
+  pop();
 
   /* update, draw, and control planets */
   for (var i = 0; i < Spheres.length; i++) {
