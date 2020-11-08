@@ -72,7 +72,7 @@ function draw() {
   /* initialize */
   angleMode(RADIANS);
   frameRate(30);
-  background(15);
+  background(10);
 
   /* center 3d camera */
   translate( width/2, height/2);
@@ -92,7 +92,6 @@ function draw() {
   }
   pop();
 
-
   /* title text*/
   if( room == 'Lobby') {
   push();
@@ -103,17 +102,17 @@ function draw() {
   }
 
   /*  raise the overall 3d light level 0-255 */
-  ambientLight(30);
+  ambientLight(40);
 
   /* draws a sun using p5 shapes */
   push();
   noStroke();
   translate( -width/2, -height/2, -100);
   emissiveMaterial( Sun.color );
-  sphere( 50 );
+  sphere( 10 );
 
   for(let f =0; f < 8; f++) {
-    fill(255,255,200, 2);
+    fill(255,255,200,10);
     circle( 0, 0, f*30);
   }
   pop();
