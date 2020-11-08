@@ -82,7 +82,7 @@ function draw() {
         sphere.update(Spheres[0]);
       else
        sphere.update(Spheres[i-1]);
-      if (windowFocused)
+      if (windowFocused && sphere.name == socket_GetUser())
         sphere.control();
       sphere.behaviors();
   

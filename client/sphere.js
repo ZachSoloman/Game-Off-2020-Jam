@@ -45,9 +45,6 @@ function Sphere(name,type, x, y, r, color, parent) {
 }
 
 Sphere.prototype.start = function() {
-  if (this.type.includes( "planet" ) ) {  
-    if(this.type == "red_planet") {this.orbit.offset = PI;}
-  }
   if (this.type.includes( "moon" ) ) { 
     this.speed = this.toss.force;
     this.maxspeed = this.toss.maxforce;
@@ -56,9 +53,8 @@ Sphere.prototype.start = function() {
 }
 
 Sphere.prototype.incHealth = function(h) {
-  this.health += h;
-  if(this.health <= 0 ) { this.health = 0; return true; }
-  if(this.health >= this.maxhealth ) { this.health = this.maxhealth;}
+  this.health = Math.min(this.maxhealth, Math.max(0, this.health + h));
+  if(this.health == 0 ) { return true; }
   return false;
 }
 
@@ -68,61 +64,60 @@ Sphere.prototype.getHealth = function() {
 
 Sphere.prototype.control = function() {
   
-  let firing = false;
-  let pulling = false;
-
-  if (this.name == socket_GetUser()) {
-    if( this.type.includes("moon")) {
-      if(keyIsDown (SHIFT)) // if `shift` key is pressed
-        firing = true;
-      if(keyIsDown(CONTROL)) // if `control` key is pressed
-        pulling = true;
-
-      if(firing) {
-        if(this.toss.firing_stage == "orbiting") {
-          this.toss.firing_stage = "charging";
-        } else if(this.toss.firing_stage == "charging") {
-          if(this.toss.force < this.toss.maxforce){
-            this.toss.force += this.toss.inc;            
-          } else if(this.toss.force >= this.toss.maxforce){
-            this.toss.force = this.toss.maxforce;
-          }
-
-          this.orbit.speed = map( this.toss.force,
-            this.toss.initial_force, this.toss.maxforce,
-            this.orbit.initial_speed, this.orbit.maxspeed 
-            );
-        }
-        if(this.toss.firing_stage == "loose") {
-          this.toss.firing_stage = "returning";
-        }
+  if(this.type.includes("moon")) {
+    let firing = false;
+    let pulling = false;
+    if(keyIsDown (SHIFT)) // if `shift` key is pressed
+      firing = true;
+    if(keyIsDown(CONTROL)) // if `control` key is pressed
+      pulling = true;
+  
+    if(firing) {
+      if(this.toss.firing_stage == "orbiting") {
+        this.toss.firing_stage = "charging";
       } 
-      else {
-        if(this.toss.firing_stage == "charging") {
-          this.toss.firing_stage = "released";
-          this.orbit.speed = 1;
-          this.orbit.dir *= -1;
+      else if(this.toss.firing_stage == "charging") {
+        if(this.toss.force < this.toss.maxforce){
+          this.toss.force += this.toss.inc;            
+        } 
+        else if(this.toss.force >= this.toss.maxforce){
+          this.toss.force = this.toss.maxforce;
         }
+  
+        this.orbit.speed = map( this.toss.force,
+          this.toss.initial_force, this.toss.maxforce,
+          this.orbit.initial_speed, this.orbit.maxspeed 
+        );
+      }
+      if(this.toss.firing_stage == "loose") {
+        this.toss.firing_stage = "returning";
+      }
+    } 
+    else {
+      if(this.toss.firing_stage == "charging") {
+        this.toss.firing_stage = "released";
+        this.orbit.speed = 1;
+        this.orbit.dir *= -1;
       }
     }
-
-    if(pulling && this.toss.firing_stage == "loose") {
-      this.toss.firing_stage = "returning";
-      this.vel.mult(0.01);
-      this.toss.force = this.toss.initial_force;
-    } else if( this.toss.firing_stage == "returning" ) {
-      this.toss.firing_stage == "loose"
-    }
+    if(pulling) {
+      if (this.toss.firing_stage == "loose") {
+        this.toss.firing_stage = "returning";
+        this.vel.mult(0.01);
+        this.toss.force = this.toss.initial_force;
+      }
+      else if(this.toss.firing_stage == "returning") {
+        this.toss.firing_stage == "loose"
+      }
+    } 
+  }
   
-   // move in direction if `a`, `w`, `s`, or `d` is pressed (ascii char value)
-    if( this.type.includes("planet")) {
-      if (keyIsDown(65)) this.vel.x -= this.speed;
-      if (keyIsDown(68)) this.vel.x += this.speed;
-      if (keyIsDown(87)) this.vel.y -= this.speed;
-      if (keyIsDown(83)) this.vel.y += this.speed;
-      if (keyIsDown(189)) this.incHealth(-1);// if `h` key is pressed
-      if (keyIsDown(187)) this.incHealth(1);// if `h` key is pressed     
-    }
+  // move in direction if `a`, `w`, `s`, or `d` is pressed (ascii char value)
+  if(this.type.includes("planet")) {
+    if (keyIsDown(65)) this.vel.x -= this.speed;
+    if (keyIsDown(68)) this.vel.x += this.speed;
+    if (keyIsDown(87)) this.vel.y -= this.speed;
+    if (keyIsDown(83)) this.vel.y += this.speed;   
   }
 }
 
