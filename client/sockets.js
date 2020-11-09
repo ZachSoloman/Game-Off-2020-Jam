@@ -23,19 +23,40 @@ var user_start_positions =
 
 function socket_GetUser() {
   return user;
-}
-
+};
+function socket_GetRoom() {
+  return room;
+};
 /* Internal */
 
 /* load existing users supplied from the server */
 function loadUsers(users) {
-  //clearSpheres();
   for (let u = 0; u < users.length; u++) {
-    createSphere(users[u], user_colors[u % user_colors.length].name, 
-		 user_colors[u % user_colors.length].color,
-      user_start_positions[u % user_start_positions.length]);
+    /* create a '_planet' and '_moon' for every user in the room*/
+    createSphere({
+      name:users[u],
+      type:user_colors[u % user_colors.length].name+"_planet",
+  	  color:user_colors[u % user_colors.length].color,
+      x:user_start_positions[u % user_start_positions.length].x,
+      y:user_start_positions[u % user_start_positions.length].y,
+      r: 20,
+      orbit_radius:0,
+      orbit_offset:0,
+      parent:{}
+    });
+    createSphere({
+      name:users[u],
+      type:user_colors[u % user_colors.length].name+"_moon",
+      color:user_colors[u % user_colors.length].color,
+      x:user_start_positions[u % user_start_positions.length].x,
+      y:user_start_positions[u % user_start_positions.length].y,
+      r:5,
+      orbit_radius:60,
+      orbit_offset:0,
+      parent:{}
+    });
   }
-}
+};
 
 /* set username to input value */
 function setUsername() {
@@ -48,24 +69,24 @@ function sendMessage() {
   if (msg) {
     socket.emit('msg', {message: msg, user: user, room: room});
   }
-}
+};
 
 /* save your sphere position to the server */
 function saveSphereData(data) {
   socket.emit('saveData', { data:data, room:room });
-}
+};
 
 /* retrieve a sphere position from the server by id */
 function retrieveSphereData( name, type ) {
   socket.emit('retrieveData', { name:name, type:type } );
-}
+};
 
 /* looks to see if user of spheres still exists*/
 function checkUserStillExists() {
   for(let sp = 0; sp < Spheres.length; sp+=2) {
     socket.emit('testUserConnections', { name:Spheres[sp].name, room:room } );
   }
-}
+};
 
 /* debug to console */
 function keyPressed() {
@@ -79,7 +100,7 @@ function keyPressed() {
     socket.emit('debug', { key:'moons' } );
   else if (keyCode === 88) // if `x` key is pressed
     socket.emit('debug', { key:'sockets' } );
-}
+};
 
 function die(user) {
   socket.emit('killUser', user );
@@ -89,11 +110,20 @@ function rematch(data) {
   socket.emit('doRematch' );
 };
 
+function populateSpace( seed ) {
+  if(seed.includes('stars')) {
+
+  }
+  if(seed.includes('asteroids')) {
+
+  }
+};
+
 /* handshake */
 socket.on('hi',function(data) {
   if(document.getElementById('error-container'))
     document.getElementById('error-container').innerHTML = data.message;
-  //loadUsers(data.users);
+  populateSpace( '_stars_asteroids');
 });
 
 socket.on('userExists', function(data) {
@@ -186,5 +216,4 @@ socket.on('die', function( deceased ) {
       if (Spheres[i].name == deceased) {
         Spheres.splice(i, 1);
       }
-
 });

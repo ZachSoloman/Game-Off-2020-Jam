@@ -1,20 +1,23 @@
 let Spheres = [];
-let star_count = 40;
+let star_count = 30;
 let Stars = [];
 let Star = { x:[],y:[],r:[] };
 let Star_scroll = 0;
 
-let Sun = { x: 0, y:0, color:[240,240,160], };
+let Sun = { x:-500, y:-250, z: -100, color:[240,240,160] };
 
-let asteroid_count = 20;
-let asteroid_radius = 300;
-let asteroids_rotate = 0;
+let asteroid_count = 30;
+let asteroid_radius = 600;
 
 let w = 1280;
 let h = 720;
 
 let planetImg;
 let font;
+let titleElm;
+let titleText = "Game Title";
+
+let projection = 'ortho';
 
 function preload() {
   font = loadFont('EdgeOfTheGalaxy-Reg.otf');
@@ -23,9 +26,12 @@ function preload() {
 function setup() {
   createCanvas( w, h, WEBGL);
 
-  ortho( -width/2, width/2, -height/2, height/2, 0, 5000);
-  //perspective( PI/3.0, width / height, 0.1, 5000);
+  if(projection == 'ortho')
+    ortho( -width/2, width/2, -height/2, height/2, 0, 5000);
+  else
+    perspective( PI/3.0, width / height, 0.1, 5000);
 
+  /* inititalize stars*/
   for (let i = 0; i < star_count; i++) {
     let randX = random(w);
     let randY = random(h);
@@ -34,29 +40,36 @@ function setup() {
     Stars.push(star);
   }
 
+  /* inititalize asteroids*/
   for (let a = 0; a < asteroid_count; a++) {
-    let randomOrbitPeriod = random( TWO_PI );
-    let rand_x = ( cos(randomOrbitPeriod) * asteroid_radius );
-    let rand_y = ( sin(randomOrbitPeriod) * asteroid_radius );
+    let rand_p = random( TWO_PI );
+    let rand_x = ( cos(rand_p) * asteroid_radius );
+    let rand_y = ( sin(rand_p) * asteroid_radius );
     let rand_r = random( 5, 10);
-    let new_asteroid = 
-    new Sphere(
-      "",
-      "_asteroid",
-      rand_x,
-      rand_y,
-      rand_r,
-      [100,100,100]
-    );
-    new_asteroid.orbit.offset = randomOrbitPeriod;
-    new_asteroid.orbit.radius = asteroid_radius;   
-    Spheres.push(new_asteroid);
+
+    createSphere( {
+      name:"",
+      type:'_asteroid',
+      x:rand_x,
+      y:rand_y,
+      color:[100,100,100],
+      r:rand_r,
+      orbit_radius:asteroid_radius,
+      orbit_offset:rand_p,
+      parent:{pos:{x:-Sun.x,y:-Sun.y,z:0}}
+    });
   }
 
   planetImg = loadImage('planet_skin.png');
   textFont(font);
   textSize(20);
+
+  /* iniitialize title element */
   textAlign(CENTER, CENTER);
+  titleElm = createElement( 'h1', titleText);
+  titleElm.id('title');
+  titleElm.position( width/2, 0);
+  titleElm.class( 'space_font' );
 }
 
 function clearSpheres() {
@@ -67,41 +80,24 @@ function sendKill( user ) {
   die(user);
 }
 
-function createSphere(name, colorName, color, start_position) {
-  let new_planet = 
-	new Sphere(
-		name,
-		""+colorName+"_planet",
-		start_position.x,
-		start_position.y,
-		20,
-		color
-	);
-  Spheres.push(new_planet);
-  let new_moon = 
-	new Sphere(
-		name,
-		""+colorName+"_moon",
-		new_planet.x,
-		new_planet.y,
-		8,
-		[ max( 80, color[0] *0.8), max( 80, color[1]*0.8), max( 80, color[2]*0.8), color[3]],
-		new_planet
-	);
-  Spheres.push(new_moon);
+function createSphere( data ) {
+  let new_sphere = 
+  new Sphere(data);
+  Spheres.push(new_sphere);
 }
 
 function drawSun() {
   /* draws a sun using p5 shapes */
   push();
   noStroke();
-  translate( -width/2, -height/2, -100);
+  /* uses half width and height to center sun before positioning */
+  translate( (-width/2) + Sun.x, (-height/2) + Sun.y, Sun.z);
   emissiveMaterial( Sun.color );
   sphere( 10 );
 
   for(let f = 0; f < 10; f++) {
-    fill(255,255,200,6);
-    circle( 0, 0, 100 + (f*20));
+    fill(255,255,200,2);
+    circle( 0, 0, 100 + (f*10));
   }
   pop();
 }
@@ -126,12 +122,17 @@ function drawStars() {
 
 function drawTitle() {
   /* title text*/
-  if( room == 'Lobby') {
-  push();
-  translate( 0, 0, -500);
-  textSize(100);
-  text('Game Title', -width/2, -height/1.3);
-  pop();
+  if( socket_GetRoom() == 'Lobby') {
+  //   push();
+  //   translate( 0, 0, -500);
+  //   textSize(100);
+  //   text('Game Title', -width/2, -height/1.3);
+  //   pop();
+  // }
+    titleElm.show(); 
+  }
+  else {
+    titleElm.hide(); 
   }
 }
 
@@ -140,7 +141,6 @@ function draw() {
   angleMode(RADIANS);
   frameRate(30);
   background(10);
-
   /* center 3d camera */
   translate( width/2, height/2);
 

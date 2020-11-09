@@ -1,3 +1,8 @@
+@font-face {
+  font-family: EdgeOfTheGalaxy ;
+  src: url(EdgeOfTheGalaxy-Reg.otf);
+}
+
 html, body {
   	margin: 0;
   	padding: 0;
@@ -24,6 +29,12 @@ body {
 	padding: 0;
 	margin: 0;
 	color:#ffffff;
+}
+
+.space_font {
+	font-family: EdgeOfTheGalaxy;
+	font-size: 72px;
+	font-weight:normal;
 }
 
 #login {

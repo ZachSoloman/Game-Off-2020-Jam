@@ -1,12 +1,14 @@
 
-function Sphere(name,type, x, y, r, color, parent) {
+function Sphere( spark ) {
+  /* spark:{ name, type, x, y, color, r, orbit_radius, orbit_offset, parent } */
   /* name = username */
-  this.name = name || "";
+  this.name = spark.name || "";
   /* type = color_planet || color_moon (e.g. red_planet, orange_moon) */
-  this.type = type || "default";
-  this.target = createVector(x,y);
-  this.color = color || [128,128,128];
-  this.pos = createVector(x,y);
+  this.type = spark.type || "default";
+  this.color = spark.color || [128,128,128];  
+  this.target = createVector(spark.x,spark.y);
+
+  this.pos = createVector(spark.x,spark.y);
   this.vel = createVector();
   this.acc = createVector();
   /* speed -> how fast can this reach maxspeed? */
@@ -15,7 +17,7 @@ function Sphere(name,type, x, y, r, color, parent) {
   this.maxforce = 1;
   this.friction = 0.1;
   /* radius */
-  this.r = r || 50;
+  this.r = spark.r || 50;
   /* health */
   this.health = 100;
   this.maxhealth = 100;
@@ -24,14 +26,15 @@ function Sphere(name,type, x, y, r, color, parent) {
   this.rotation = 0;
 
   //moon variables
-  this.parent = parent || {};
+  this.parent = spark.parent || {};
   
   this.orbit = {
     isOrbiting:false,
-    body:{},
+    body: spark.parent || {},
     x:60,y:60,
-    radius:60,
-    period:0,offset:0,
+    radius: spark.orbit_radius,
+    period: 0,
+    offset: spark.orbit_offset || 0,
     initial_speed:5,
     speed:5,speed_inc:1,maxspeed:25,
     dir:1
@@ -137,7 +140,7 @@ Sphere.prototype.control = function() {
       if (keyIsDown(189)) this.incHealth(-1);// if `h` key is pressed
       if (keyIsDown(187)) this.incHealth(1);// if `h` key is pressed
       if(keyIsDown(SHIFT)) this.adopting = true;// if `SHIFT` key is pressed
-      else { this.adopting = false; this.children = 1;}
+      else this.adopting = false;
     }
   }
 }
@@ -226,6 +229,9 @@ Sphere.prototype.behaviors = function() {
     this.recurse();
     if(this.adopting && this.children < this.childLimit) {
       this.adopt( Spheres );
+    } 
+    else if(!this.adopting && this.children > 1) {
+      this.children = 1;
     }
   }
   if(this.type.includes( "moon" ) ) {
@@ -261,15 +267,15 @@ Sphere.prototype.getParent = function( p, type ) {
   return {};
 }
 
-Sphere.prototype.doOrbit = function( parent ) {
-  if(parent.pos) {
-  this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
+Sphere.prototype.doOrbit = function( ) {
+  if(this.orbit.body.pos) {
+    this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
 
-  this.target = createVector(
-    parent.pos.x + ( cos(this.orbit.period+this.orbit.offset) * this.orbit.radius ), 
-    parent.pos.y + ( sin(this.orbit.period+this.orbit.offset) * this.orbit.radius * 0.5 ), 
-    parent.pos.z + ( sin(this.orbit.period+this.orbit.offset) * this.orbit.radius * 0.5 )    
-  );
+    this.target = createVector(
+      this.orbit.body.pos.x + ( cos(this.orbit.period+this.orbit.offset) * this.orbit.radius ), 
+      this.orbit.body.pos.y + ( sin(this.orbit.period+this.orbit.offset) * this.orbit.radius * 0.5 ), 
+      this.orbit.body.pos.z + ( sin(this.orbit.period+this.orbit.offset) * this.orbit.radius * 0.5 )    
+    );
   }
 }
 
@@ -280,20 +286,23 @@ Sphere.prototype.updateParent = function( target ) {
     else if(this.type.includes("moon"))
       this.orbit.body = this.parent = this.getParent(target,"_planet");
     else if(this.type.includes("asteroid")) {
-      this.orbit.body = this.parent = {pos:{x:width/2,y:height/2}};
+      this.orbit.body = this.parent = {pos:{x:(width/2)+Sun.x,y:(height/2)+Sun.y,z:0}};
     }
   }
 }
 
 Sphere.prototype.update = function(e) {
 
+  /* check for collisions */
   let amHit = this.collide(e);
   if(amHit != false) this.incHealth(amHit);
 
-  if(this.parent != {} || this.parent != undefined) {
+  /* update parent */
+  if( e != undefined && ( this.parent != {} || this.parent != undefined)) {
     this.updateParent(e);
+    /* if i have a parent to orbit, do so*/
     if(this.orbit.isOrbiting) {
-      this.doOrbit(this.parent);
+      this.doOrbit();
     }
   }
   
@@ -377,7 +386,7 @@ Sphere.prototype.show = function() {
   push();
 
   /* 3d lighting, uses planet color to color texture */
-  pointLight( this.color, 0, 0, -10 );
+  pointLight( this.color, Sun.x, Sun.y, -10 );
 
   /* do planet rotation*/
   this.rotation = this.rotation + (1*(deltaTime / 700));
@@ -520,7 +529,7 @@ Sphere.prototype.bounce = function(target) {
 
     /* kill asteroids after two bounces */
   if( bounced && this.type.includes("_asteroid") ) {
-    this.incHealth(-this.maxhealth/2);
+    this.incHealth(-this.maxhealth/3);
   }
 }
 
@@ -543,13 +552,14 @@ Sphere.prototype.collide = function(spheres) {
 }
 
 Sphere.prototype.adopt = function( spheres ) {
-  /* if 'asteroid' near a planet trying to adopt, get adopted*/
+  /* if an '_asteroid' is near, try to adopt them */
   for(let s = 0; s < spheres.length; s++) {
     if(this.type.includes('_planet')) {
       if(spheres[s].type.includes('_asteroid') && !spheres[s].type.includes('_moon') ){
         if(this.adopting) {
           let dist = p5.Vector.dist( spheres[s].pos, this.pos);
-          if(dist < (this.r + spheres[s].r)*2){
+          let near = ( this.r + spheres[s].r ) * 2;
+          if(dist <= near ){
             spheres[s].name = this.name;
             spheres[s].type += "_moon";
             spheres[s].orbit.radius = 60;
@@ -559,26 +569,6 @@ Sphere.prototype.adopt = function( spheres ) {
       }
     }
   }
-}
-
-Sphere.prototype.getAdopted = function( spheres ) {
-  /* if 'asteroid' near a planet trying to adopt, get adopted*/
-  for(let s = 0; s < spheres.length; s++) {
-    if(this.type.includes('_asteroid')) {
-      if(spheres[s].type.includes('_planet')){
-        if(spheres[s].adopting) {
-          let dist = p5.Vector.dist( spheres[s].pos, this.pos);
-          if(dist < (this.r + spheres[s].r)*2){
-            this.name = spheres[s].name;
-            this.type += "_moon";
-            this.orbit.radius = 60;
-            return true;
-          }
-        }
-      }
-    }
-  }
-  return false;
 }
 
 Sphere.prototype.die = function( spheres ) {
