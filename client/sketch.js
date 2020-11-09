@@ -101,9 +101,6 @@ function draw() {
   pop();
   }
 
-  /*  raise the overall 3d light level 0-255 */
-  ambientLight(40);
-
   /* draws a sun using p5 shapes */
   push();
   noStroke();
@@ -111,11 +108,14 @@ function draw() {
   emissiveMaterial( Sun.color );
   sphere( 10 );
 
-  for(let f =0; f < 8; f++) {
-    fill(255,255,200,10);
-    circle( 0, 0, f*30);
+  for(let f =0; f < 10; f++) {
+    fill(255,255,200,6);
+    circle( 0, 0, f*40);
   }
   pop();
+
+  /*  raise the overall 3d light level 0-255 */
+  ambientLight(40);
 
   /* update, draw, and control planets */
   for (var i = 0; i < Spheres.length; i++) {
