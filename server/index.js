@@ -169,12 +169,14 @@ nsp.on('connection', function(socket) {
 		}
 	});
 	socket.on('testUserConnections', function(data) {
-		if(!users.includes(data.name)) {
+		if(data != undefined) {
+		if(!users.includes(data.name) && !data.type  == "_asteroid" ) {
 	    	/* send disconnect to clients */
     		nsp.to(data.room).emit('userDisconnect', data.name);
     		nsp.to(data.room).emit('newmsg', { user: data.name, message: ' disconnected from '+data.room});
 			removePlanet(data.name);
 			removeMoon(data.name);			
+		}
 		}
 	});
 	socket.on('debug', function( key ) {

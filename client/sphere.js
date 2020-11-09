@@ -44,6 +44,12 @@ function Sphere(name,type, x, y, r, color, parent) {
     maxforce:40
   };
 
+  /* asteroid behavior*/
+  this.adopting = false;
+  this.hit_force = -10;
+  this.children = 1;
+  this.childLimit = 4;
+
   this.start();
 }
 
@@ -51,7 +57,8 @@ Sphere.prototype.start = function() {
   if (this.type.includes( "planet" ) ) {  
     if(this.type == "red_planet") {this.orbit.offset = PI;}
   }
-  if (this.type.includes( "moon" ) ) { 
+  if (this.type.includes( "moon" ) 
+    || this.type.includes( "asteroid" )) { 
     this.speed = this.toss.force;
     this.maxspeed = this.toss.maxforce;
     this.orbit.isOrbiting = true;
@@ -78,7 +85,7 @@ Sphere.prototype.control = function() {
     if( this.type.includes("moon")) {
       if(keyIsDown (SHIFT)) // if `shift` key is pressed
         firing = true;
-      if(keyIsDown(CONTROL)) // if `control` key is pressed
+      if(keyIsDown(67)) // if `c` key is pressed
         pulling = true;
 
       if(firing) {
@@ -96,7 +103,7 @@ Sphere.prototype.control = function() {
             this.orbit.initial_speed, this.orbit.maxspeed 
             );
         }
-        if(this.toss.firing_stage == "loose") {
+        if(this.toss.firing_stage == "loose" && !this.type.includes("_asteroid")) {
           this.toss.firing_stage = "returning";
         }
       } 
@@ -105,11 +112,15 @@ Sphere.prototype.control = function() {
           this.toss.firing_stage = "released";
           this.orbit.speed = 1;
           this.orbit.dir *= -1;
+
+          if( this.type.includes("_asteroid") ) {
+            this.name = "";
+          }
         }
       }
     }
 
-    if(pulling && this.toss.firing_stage == "loose") {
+    if(pulling && this.toss.firing_stage == "loose" && !this.type.includes("_asteroid")) {
       this.toss.firing_stage = "returning";
       this.vel.mult(0.01);
       this.toss.force = this.toss.initial_force;
@@ -124,7 +135,9 @@ Sphere.prototype.control = function() {
       if (keyIsDown(87)) this.vel.y -= this.speed;
       if (keyIsDown(83)) this.vel.y += this.speed;
       if (keyIsDown(189)) this.incHealth(-1);// if `h` key is pressed
-      if (keyIsDown(187)) this.incHealth(1);// if `h` key is pressed     
+      if (keyIsDown(187)) this.incHealth(1);// if `h` key is pressed
+      if(keyIsDown(SHIFT)) this.adopting = true;// if `SHIFT` key is pressed
+      else { this.adopting = false; this.children = 1;}
     }
   }
 }
@@ -211,6 +224,9 @@ Sphere.prototype.behaviors = function() {
   
   if(this.type.includes("planet")) {
     this.recurse();
+    if(this.adopting && this.children < this.childLimit) {
+      this.adopt( Spheres );
+    }
   }
   if(this.type.includes( "moon" ) ) {
     if( this.toss.firing_stage == "orbiting") {
@@ -225,42 +241,61 @@ Sphere.prototype.behaviors = function() {
       arrive.mult(4);
       this.applyForce(arrive);
     }
-  }
+  } else if( this.type.includes("asteroid")) {
 
+  }
 }
 
 Sphere.prototype.applyForce = function(f) {
   this.acc.add(f);
 }
 
-Sphere.prototype.updateTarget = function( target ) {
-  if(this.type.includes("planet")) {
-    this.parent = target || {};
-    this.orbit.period += TWO_PI / this.orbit.radius;
-    this.target = createVector(this.x,this.y);
-    this.target = createVector(
-      this.parent.pos.x + ((sin((this.orbit.period+this.orbit.offset)
-          * this.orbit.dir) * this.orbit.x)), 
-      this.parent.pos.y + ((cos((this.orbit.period+this.orbit.offset)
-          * this.orbit.dir) * this.orbit.y))
-    );
+Sphere.prototype.getParent = function( p, type ) {
+  for(let i = 0; i < p.length; i++) {
+    if( p[i].type.includes(type) ) {
+      if(p[i].name == this.name){
+        return p[i];
+      }
+    }
   }
-  
-  if(this.type.includes("moon") ) {
-    this.orbit.body = this.parent = target || {};
-    this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
+  return {};
+}
 
-    this.target = createVector(
-      this.parent.pos.x + ( cos(this.orbit.period) * this.orbit.radius ), 
-      this.parent.pos.y + ( sin(this.orbit.period) * this.orbit.radius * 0.5 ), 
-      this.parent.pos.z + ( sin(this.orbit.period) * this.orbit.radius * 0.5 )    
-    );
+Sphere.prototype.doOrbit = function( parent ) {
+  if(parent.pos) {
+  this.orbit.period += (this.orbit.speed / this.orbit.radius) * this.orbit.dir;
+
+  this.target = createVector(
+    parent.pos.x + ( cos(this.orbit.period+this.orbit.offset) * this.orbit.radius ), 
+    parent.pos.y + ( sin(this.orbit.period+this.orbit.offset) * this.orbit.radius * 0.5 ), 
+    parent.pos.z + ( sin(this.orbit.period+this.orbit.offset) * this.orbit.radius * 0.5 )    
+  );
+  }
+}
+
+Sphere.prototype.updateParent = function( target ) {
+  if(target!=undefined) {
+    if(this.type.includes("planet"))
+      this.orbit.body = this.parent = this.getParent(target,"_sun");
+    else if(this.type.includes("moon"))
+      this.orbit.body = this.parent = this.getParent(target,"_planet");
+    else if(this.type.includes("asteroid")) {
+      this.orbit.body = this.parent = {pos:{x:width/2,y:height/2}};
+    }
   }
 }
 
 Sphere.prototype.update = function(e) {
-  
-  this.updateTarget(e);
+
+  let amHit = this.collide(e);
+  if(amHit != false) this.incHealth(amHit);
+
+  if(this.parent != {} || this.parent != undefined) {
+    this.updateParent(e);
+    if(this.orbit.isOrbiting) {
+      this.doOrbit(this.parent);
+    }
+  }
   
   if(this.type.includes("moon") ) {
     if(this.toss.firing_stage == "orbiting" 
@@ -269,6 +304,9 @@ Sphere.prototype.update = function(e) {
       this.acc = createVector(0,0);
       this.pos = createVector(this.target.x, this.target.y);
     }
+  } 
+  else if(this.type.includes("asteroid") ) {
+    this.pos = createVector(this.target.x, this.target.y);
   }
 
   this.pos.add(this.vel);
@@ -290,6 +328,20 @@ Sphere.prototype.update = function(e) {
   }
 
   this.acc.mult(0);
+
+  /* from sketch.js update*/
+  this.control();
+  this.behaviors();
+  this.show(); 
+
+  if(this.health <= 0) {
+    if(this.type.includes('_asteroid')){
+      this.die( e );
+    }
+    else { 
+      return die( this.name );
+    }
+  }
 } 
 
 Sphere.prototype.show = function() {
@@ -354,11 +406,19 @@ Sphere.prototype.show = function() {
       sphere( this.r);
       pop();
 
-    } else {
+    } else if(this.type.includes("moon")) {
 
       // draw moon
       push();
       translate( 0, 0, 0);
+      noStroke();
+      texture(planetImg);
+      sphere( this.r);
+      pop();
+    } else if(this.type.includes("asteroid")) {
+      // draw moon
+      push();
+      translate( 0, 0, -this.r*3);
       noStroke();
       texture(planetImg);
       sphere( this.r);
@@ -379,7 +439,7 @@ Sphere.prototype.show = function() {
     }
     else if(this.type.includes("blue")) {
       textAlign(RIGHT);
-      text( this.name, -50, -height + 50);      
+      text( this.name, -50, -height + 50);
     }
     pop();
   }
@@ -443,17 +503,25 @@ Sphere.prototype.recurse = function(target) {
 Sphere.prototype.bounce = function(target) {
   
 	let w = this.r / 2;
-  
+  let bounced = false;
+
 	if (this.pos.x <= w && this.vel.x < 0
 	|| this.pos.x > width - w && this.vel.x > 0) {
 		this.vel = createVector(-(this.vel.x),this.vel.y);
 		this.pos.add(this.vel);
+    bounced = true;
 	}
 	else if (this.pos.y <= w && this.vel.y < 0
 	|| this.pos.y > height - w && this.vel.y > 0) {
 		this.vel = createVector(this.vel.x,-(this.vel.y));
 		this.pos.add(this.vel);
+    bounced = true;
 	}
+
+    /* kill asteroids after two bounces */
+  if( bounced && this.type.includes("_asteroid") ) {
+    this.incHealth(-this.maxhealth/2);
+  }
 }
 
 Sphere.prototype.collide = function(spheres) {
@@ -464,12 +532,59 @@ Sphere.prototype.collide = function(spheres) {
         if(spheres[s].name != this.name) {
           let dist = p5.Vector.dist( spheres[s].pos, this.pos);
           if(dist < (this.r + spheres[s].r)){//if I'm close enough to be hit
-            let isDead = this.incHealth(-10);
-            return isDead;
+            return spheres[s].hit_force;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+Sphere.prototype.adopt = function( spheres ) {
+  /* if 'asteroid' near a planet trying to adopt, get adopted*/
+  for(let s = 0; s < spheres.length; s++) {
+    if(this.type.includes('_planet')) {
+      if(spheres[s].type.includes('_asteroid') && !spheres[s].type.includes('_moon') ){
+        if(this.adopting) {
+          let dist = p5.Vector.dist( spheres[s].pos, this.pos);
+          if(dist < (this.r + spheres[s].r)*2){
+            spheres[s].name = this.name;
+            spheres[s].type += "_moon";
+            spheres[s].orbit.radius = 60;
+            this.children++;
+          }
+        }
+      }
+    }
+  }
+}
+
+Sphere.prototype.getAdopted = function( spheres ) {
+  /* if 'asteroid' near a planet trying to adopt, get adopted*/
+  for(let s = 0; s < spheres.length; s++) {
+    if(this.type.includes('_asteroid')) {
+      if(spheres[s].type.includes('_planet')){
+        if(spheres[s].adopting) {
+          let dist = p5.Vector.dist( spheres[s].pos, this.pos);
+          if(dist < (this.r + spheres[s].r)*2){
+            this.name = spheres[s].name;
+            this.type += "_moon";
+            this.orbit.radius = 60;
+            return true;
           }
         }
       }
     }
   }
   return false;
+}
+
+Sphere.prototype.die = function( spheres ) {
+  /* removes self from Spheres */
+  for(let s = 0; s < spheres.length; s++) {
+    if(spheres[s] == this)
+      spheres.splice(s, 1);
+  }
 }

@@ -29,7 +29,7 @@ function socket_GetUser() {
 
 /* load existing users supplied from the server */
 function loadUsers(users) {
-  clearSpheres();
+  //clearSpheres();
   for (let u = 0; u < users.length; u++) {
     createSphere(users[u], user_colors[u % user_colors.length].name, 
 		 user_colors[u % user_colors.length].color,
@@ -147,8 +147,15 @@ socket.on('newmsg', function(data) {
 }); 
 
 socket.on('spawnAll', function(data) {
-  Spheres = [];
+  //Spheres = [];
+  if(data != undefined) {
+    for (let i = 0; i < Spheres.length; i++ ) {
+      if ( Spheres[i].type != '_asteroid' ) {
+        Spheres.splice(i ,1);
+      }
+    }
   loadUsers(data.users);
+  }
 }); 
 
 socket.on('loadData', function(data) {
